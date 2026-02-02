@@ -3,9 +3,11 @@ import axios from "axios";
 import "./Profile.css";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,15 +29,22 @@ const Profile = () => {
     fetchProfile();
   }, []);
 
+  /* ================= LOGOUT ================= */
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("profilePic");
+    navigate("/login");
+  };
+
   if (!user) return <div className="loading">Loading profile...</div>;
 
   return (
     <>
-      {/* ✅ SAME NAVBAR AS HOME */}
       <Navbar />
 
       <div className="dashboard">
-        {/* LEFT SIDEBAR */}
+        {/* SIDEBAR */}
         <aside className="sidebar">
           <div className="profile-box">
             <img
@@ -65,10 +74,21 @@ const Profile = () => {
 
           <button className="btn sos">🚨 SOS</button>
           <button className="btn weather">⛅ Weather Alert</button>
-          <button className="btn edit">✏️ Edit Profile</button>
+
+          <button
+            className="btn edit"
+            onClick={() => navigate("/edit-profile")}
+          >
+            ✏️ Edit Profile
+          </button>
+
+          {/* ✅ LOGOUT BUTTON */}
+          <button className="btn logout" onClick={handleLogout}>
+            🚪 Logout
+          </button>
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* CONTENT */}
         <main className="content">
           <div className="profile-details">
             <h3>Profile Information</h3>
@@ -113,7 +133,6 @@ const Profile = () => {
         </main>
       </div>
 
-      {/* ✅ SAME FOOTER AS HOME */}
       <Footer />
     </>
   );

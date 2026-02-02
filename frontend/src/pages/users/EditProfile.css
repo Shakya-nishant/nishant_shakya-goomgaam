@@ -1,0 +1,71 @@
+.edit-profile-container {
+  max-width: 480px;
+  margin: 40px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.12);
+}
+
+.edit-profile-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.profile-pic-wrapper {
+  position: relative;
+  width: 120px;
+  margin: 0 auto 20px;
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #eee;
+}
+
+.camera-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #2d8cff;
+  color: #fff;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.camera-icon input {
+  display: none;
+}
+
+.edit-profile-container input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.edit-profile-container h4 {
+  margin: 20px 0 10px;
+  font-size: 16px;
+}
+
+.edit-profile-container button {
+  width: 100%;
+  padding: 12px;
+  background: #2d8cff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.edit-profile-container button:hover {
+  background: #1b6fd6;
+}

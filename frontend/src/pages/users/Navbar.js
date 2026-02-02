@@ -8,9 +8,22 @@ const Navbar = () => {
   const [profilePic, setProfilePic] = useState(null);
 
   useEffect(() => {
-    const pic = localStorage.getItem("profilePic");
-    if (pic) setProfilePic(pic);
+    const loadProfilePic = () => {
+      const pic = localStorage.getItem("profilePic");
+      setProfilePic(pic);
+    };
+
+    loadProfilePic();
+
+    // Listen for profilePic changes (login / update profile)
+    window.addEventListener("storage", loadProfilePic);
+
+    return () => {
+      window.removeEventListener("storage", loadProfilePic);
+    };
   }, []);
+
+  const fallbackText = role === "admin" ? "AD" : "U";
 
   return (
     <nav className="navbar">
@@ -39,7 +52,7 @@ const Navbar = () => {
           </>
         )}
 
-        {/* ✅ CLICKABLE PROFILE ICON */}
+        {/* PROFILE ICON */}
         <Link to="/profile" className="profile-link">
           <div className="profile-circle">
             {profilePic ? (
@@ -48,10 +61,8 @@ const Navbar = () => {
                 alt="Profile"
                 className="profile-img"
               />
-            ) : role === "admin" ? (
-              "A"
             ) : (
-              "U"
+              <span className="profile-initial">{fallbackText}</span>
             )}
           </div>
         </Link>

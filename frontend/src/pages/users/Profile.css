@@ -112,3 +112,11 @@
   text-align: center;
   font-size: 18px;
 }
+
+.logout {
+  background: #6b7280;
+}
+
+.logout:hover {
+  background: #4b5563;
+}

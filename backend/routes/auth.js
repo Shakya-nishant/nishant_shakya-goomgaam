@@ -98,7 +98,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/* ================= GET LOGGED IN USER PROFILE ================= */
+/* ================= GET LOGGED IN USER ================= */
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -120,7 +120,76 @@ router.get("/me", async (req, res) => {
   }
 });
 
-/* ================= VERIFY EMAIL FOR PASSWORD RESET ================= */
+/* ================= UPDATE PROFILE ================= */
+router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const {
+      name,
+      email,
+      phone,
+      emergencyWhatsapp,
+      oldPassword,
+      password,
+      confirmPassword,
+    } = req.body;
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (emergencyWhatsapp) user.emergencyWhatsapp = emergencyWhatsapp;
+
+    if (password || confirmPassword) {
+      if (!oldPassword) {
+        return res.status(400).json({ message: "Old password is required" });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Old password is incorrect" });
+      }
+
+      if (password !== confirmPassword) {
+        return res
+          .status(400)
+          .json({ message: "New password and confirm password do not match" });
+      }
+
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    if (req.file) {
+      user.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        profilePic: user.profilePic,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ================= VERIFY EMAIL ================= */
 router.post("/verify-email", async (req, res) => {
   const { email } = req.body;
 

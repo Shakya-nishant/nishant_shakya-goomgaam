@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi"; // 🔑 icons for show/hide password
 import "./Auth.css";
 import logo from "../../assets/GoomGaam Logo.png";
 
@@ -22,9 +23,13 @@ function Login() {
         password,
       });
 
-      // Save token and role properly
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
+      if (res.data.profilePic) {
+        localStorage.setItem("profilePic", res.data.profilePic);
+      } else {
+        localStorage.removeItem("profilePic");
+      }
 
       navigate("/home");
     } catch (err) {
@@ -60,9 +65,9 @@ function Login() {
           <span
             className="eye-btn"
             onClick={() => setShowPassword(!showPassword)}
-            title="Show / Hide Password"
+            title={showPassword ? "Hide Password" : "Show Password"}
           >
-            {showPassword ? "🙈" : "👁️"}
+            {showPassword ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
 
