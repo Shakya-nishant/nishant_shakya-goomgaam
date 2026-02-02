@@ -1,24 +1,13 @@
 import React from "react";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 import "./Auth.css";
-import logo from "../../assets/GoomGaam Logo.png";
 
 const Home = () => {
   return (
     <div className="home-container">
       {/* Navbar */}
-      <nav className="navbar">
-        <div className="nav-left">
-          <img src={logo} alt="GoomGaam" className="nav-logo" />
-          <span className="brand-name">GoomGaam</span>
-        </div>
-
-        <div className="nav-right">
-          <a href="#">Home</a>
-          <a href="#">Explore Trek</a>
-          <a href="#">Share Trek</a>
-          <div className="profile-circle">N</div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="hero">
@@ -133,33 +122,7 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="footer">
-        <div className="footer-left">
-          <h3>GoomGaam</h3>
-          <p>
-            Connecting adventurers worldwide through shared trekking
-            experiences.
-          </p>
-        </div>
-
-        <div className="footer-right">
-          <div>
-            <h4>Explore</h4>
-            <p>Popular Treks</p>
-            <p>Destinations</p>
-          </div>
-          <div>
-            <h4>Community</h4>
-            <p>Share Trek</p>
-            <p>Leaderboard</p>
-          </div>
-          <div>
-            <h4>Support</h4>
-            <p>Help Center</p>
-            <p>Privacy Policy</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

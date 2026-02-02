@@ -1,0 +1,114 @@
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: #f7f9fc;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: #ffffff;
+  padding: 20px;
+  border-right: 1px solid #eee;
+}
+
+.profile-box {
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.reward-card {
+  background: #22c55e;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.menu li.active {
+  background: #22c55e;
+  color: white;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.sos {
+  background: #ef4444;
+}
+
+.weather {
+  background: #f97316;
+}
+
+.edit {
+  background: #3b82f6;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 30px;
+}
+
+.profile-details {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+}
+
+.profile-details p {
+  margin: 8px 0;
+}
+
+/* STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.stat-card span {
+  font-size: 14px;
+  color: gray;
+}
+
+.loading {
+  padding: 50px;
+  text-align: center;
+  font-size: 18px;
+}

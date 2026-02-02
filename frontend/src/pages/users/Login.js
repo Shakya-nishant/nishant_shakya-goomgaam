@@ -19,10 +19,13 @@ function Login() {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
-        password
+        password,
       });
 
+      // Save token and role properly
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.role);
+
       navigate("/home");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -42,7 +45,7 @@ function Login() {
           type="email"
           placeholder="Email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
 
@@ -51,7 +54,7 @@ function Login() {
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           <span
@@ -65,6 +68,10 @@ function Login() {
 
         <button type="submit">Login</button>
       </form>
+
+      <p className="forgot-password">
+        <Link to="/forgot-password">Forgot Password?</Link>
+      </p>
 
       <p>
         Don’t have an account? <Link to="/signup">Sign up</Link>

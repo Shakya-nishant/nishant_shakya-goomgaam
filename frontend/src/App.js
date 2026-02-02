@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/users/Login";
 import Signup from "./pages/users/Signup";
 import Home from "./pages/users/Home";
+import ForgetPassword from "./pages/users/ForgetPassword";
+import Profile from "./pages/users/Profile";
 
 function App() {
   return (
@@ -13,9 +15,12 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
 
         {/* User Home */}
         <Route path="/home" element={<Home />} />
+
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

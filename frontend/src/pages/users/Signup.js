@@ -14,6 +14,7 @@ function Signup() {
     confirmPassword: "",
   });
 
+  const [profilePic, setProfilePic] = useState(null); // new state for profile picture
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -28,21 +29,40 @@ function Signup() {
     e.preventDefault();
     setError("");
 
+    // Password validations
     if (form.password.length < 8) {
       setError("Password must be at least 8 characters");
       return;
     }
-
     if (form.password !== form.confirmPassword) {
       setError("Password and Confirm Password do not match");
       return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", {
-        ...form,
-        role: "user",
-      });
+      // Use FormData for file upload
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("email", form.email);
+      formData.append("phone", form.phone);
+      formData.append("emergencyWhatsapp", form.emergencyWhatsapp);
+      formData.append("password", form.password);
+      formData.append("confirmPassword", form.confirmPassword);
+      formData.append("role", "user"); // default role
+      if (profilePic) formData.append("profilePic", profilePic);
+
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      // Optionally save profilePic URL to localStorage for Navbar
+      if (res.data.user?.profilePic) {
+        localStorage.setItem("profilePic", res.data.user.profilePic);
+      }
 
       navigate("/home");
     } catch (err) {
@@ -82,6 +102,13 @@ function Signup() {
           placeholder="Emergency WhatsApp"
           onChange={handleChange}
           required
+        />
+
+        {/* File input for profile picture */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setProfilePic(e.target.files[0])}
         />
 
         <div className="password-box">
@@ -127,5 +154,3 @@ function Signup() {
 }
 
 export default Signup;
-
-
