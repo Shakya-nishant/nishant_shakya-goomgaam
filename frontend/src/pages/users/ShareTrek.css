@@ -1,0 +1,138 @@
+.share-trek-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 30px;
+  background: #f7f9fc;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.form-section {
+  flex: 1 1 400px;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h2 {
+  margin-bottom: 10px;
+}
+
+.form-section p {
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.form-section label {
+  font-weight: 500;
+  margin-top: 10px;
+  display: block;
+}
+
+.form-section input,
+.form-section textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
+.costs {
+  display: flex;
+  gap: 10px;
+}
+
+.costs input {
+  flex: 1;
+}
+
+.difficulty {
+  margin-bottom: 15px;
+}
+
+.difficulty label {
+  margin-right: 10px;
+}
+
+.climate-warning {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.submit-btn:hover {
+  background: #16a34a;
+}
+
+.preview-section {
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.preview-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.preview-image {
+  height: 150px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+.preview-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.map-placeholder {
+  background: #e0e0e0;
+  height: 180px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+}

@@ -5,7 +5,8 @@ import Home from "./pages/users/Home";
 import ForgetPassword from "./pages/users/ForgetPassword";
 import Profile from "./pages/users/Profile";
 import EditProfile from "./pages/users/EditProfile";
-
+import ShareTrek from "./pages/users/ShareTrek";
+import ExploreTrek from "./pages/users/ExploreTrek"; // ✅ import new page
 
 function App() {
   return (
@@ -13,15 +14,15 @@ function App() {
       <Routes>
         {/* Default Route */}
         <Route path="/" element={<Navigate to="/login" />} />
-
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
-
-        {/* User Home */}
+        {/* User & Admin Routes */}
         <Route path="/home" element={<Home />} />
-
+        <Route path="/explore-trek" element={<ExploreTrek />} />{" "}
+        {/* ✅ new route */}
+        <Route path="/share-trek" element={<ShareTrek />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>

@@ -1,0 +1,96 @@
+.explore-trek-container {
+  width: 90%;
+  max-width: 1000px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.trek-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.trek-card {
+  display: flex;
+  gap: 15px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: box-shadow 0.2s;
+}
+
+.trek-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.trek-photo img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.trek-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.trek-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trek-header h3 {
+  margin: 0;
+}
+
+.trek-user {
+  font-size: 14px;
+  color: #555;
+}
+
+.trek-description {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.trek-info {
+  display: flex;
+  gap: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.trek-actions button {
+  margin-right: 10px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #eee;
+  transition: background-color 0.2s;
+}
+
+.trek-actions button:hover {
+  background-color: #ddd;
+}

@@ -12,15 +12,9 @@ const Navbar = () => {
       const pic = localStorage.getItem("profilePic");
       setProfilePic(pic);
     };
-
     loadProfilePic();
-
-    // Listen for profilePic changes (login / update profile)
     window.addEventListener("storage", loadProfilePic);
-
-    return () => {
-      window.removeEventListener("storage", loadProfilePic);
-    };
+    return () => window.removeEventListener("storage", loadProfilePic);
   }, []);
 
   const fallbackText = role === "admin" ? "AD" : "U";

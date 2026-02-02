@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { FiEye, FiEyeOff } from "react-icons/fi"; // 🔑 icons for show/hide password
+import { FiEye, FiEyeOff } from "react-icons/fi"; 
 import "./Auth.css";
 import logo from "../../assets/GoomGaam Logo.png";
 
