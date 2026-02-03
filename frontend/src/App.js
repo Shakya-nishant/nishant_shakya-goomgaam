@@ -7,6 +7,7 @@ import Profile from "./pages/users/Profile";
 import EditProfile from "./pages/users/EditProfile";
 import ShareTrek from "./pages/users/ShareTrek";
 import ExploreTrek from "./pages/users/ExploreTrek"; // ✅ import new page
+import UserDetail from "./pages/admin/UserDetail";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/share-trek" element={<ShareTrek />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/users" element={<UserDetail />} />
       </Routes>
     </BrowserRouter>
   );

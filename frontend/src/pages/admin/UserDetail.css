@@ -1,0 +1,203 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.user-detail-container {
+  padding: 20px;
+  min-height: calc(
+    100vh - 80px
+  ); /* ensure footer at bottom, adjust 80px if footer is taller */
+  display: flex;
+  flex-direction: column;
+}
+
+.user-cards {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(250px, 1fr)
+  ); /* 3 cards per row on desktop */
+  gap: 20px;
+  justify-items: center;
+}
+
+/* Cards */
+.user-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  width: 100%;
+  max-width: 250px; /* ensures responsive size */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+/* Profile pic */
+.profile-pic img,
+.modal-profile-pic img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.profile-initials {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #2196f3;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0 auto 10px;
+}
+
+/* Card text */
+.user-card h3 {
+  margin: 10px 0 5px 0;
+}
+
+.user-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Actions */
+.user-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 5px;
+}
+
+.user-actions button {
+  flex: 1;
+  padding: 5px;
+  font-size: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.user-actions button:hover {
+  opacity: 0.8;
+}
+
+.user-actions button:first-child {
+  background-color: #4caf50;
+  color: white;
+}
+
+.user-actions button:nth-child(2) {
+  background-color: #2196f3;
+  color: white;
+}
+
+.user-actions button:last-child {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 350px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.modal-profile-pic {
+  margin-bottom: 15px;
+}
+
+.modal-form label {
+  display: block;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.modal-form input,
+.modal-form select {
+  width: 100%;
+  padding: 6px;
+  margin-top: 3px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal-buttons button:first-child {
+  background-color: #4caf50;
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background-color: #f44336;
+  color: white;
+}
+
+.success-msg {
+  background-color: #4caf50;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+/* Footer fix */
+footer {
+  margin-top: auto; /* pushes footer to bottom */
+}
+
+.filter-container {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.filter-container input,
+.filter-container select {
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}

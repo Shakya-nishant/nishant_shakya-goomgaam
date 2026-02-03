@@ -225,4 +225,65 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
+/* ===================== ADMIN ROUTES ===================== */
+
+// GET all users
+router.get("/all-users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// DELETE a user
+router.delete("/delete-user/:id", async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "User deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// UPDATE role
+router.put("/update-role/:id", async (req, res) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.role = role;
+    await user.save();
+    res.json({ message: "Role updated", role: user.role });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ===================== UPDATE USER DETAILS BY ADMIN ===================== */
+router.put("/update-user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, emergencyWhatsapp, role } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    if (emergencyWhatsapp) user.emergencyWhatsapp = emergencyWhatsapp;
+    if (role) user.role = role;
+
+    await user.save();
+
+    res.json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
