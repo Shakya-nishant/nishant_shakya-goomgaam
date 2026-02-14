@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import "./ExploreTrek.css";
+import "../css/ExploreTrek.css";
 
 const treksData = [
   {

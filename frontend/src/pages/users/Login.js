@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi"; 
-import "./Auth.css";
+import "../css/Auth.css";
 import logo from "../../assets/GoomGaam Logo.png";
 
 function Login() {

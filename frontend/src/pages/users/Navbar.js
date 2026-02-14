@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/GoomGaam Logo.png";
-import "./Auth.css";
+import "../css/Auth.css";
 
 const Navbar = () => {
   const role = localStorage.getItem("role");

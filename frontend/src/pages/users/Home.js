@@ -1,7 +1,7 @@
 import React from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import "./Auth.css";
+import "../css/Auth.css";
 
 const Home = () => {
   return (

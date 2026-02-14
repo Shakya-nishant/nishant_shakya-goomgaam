@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import "./ShareTrek.css";
+import "../css/ShareTrek.css";
 
 const ShareTrek = () => {
   const [title, setTitle] = useState("");

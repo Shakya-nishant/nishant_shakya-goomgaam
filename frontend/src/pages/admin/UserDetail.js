@@ -3,7 +3,7 @@ import axios from "axios";
 import Navbar from "../users/Navbar";
 import Footer from "../users/Footer";
 import { FaEye, FaTrash, FaEdit } from "react-icons/fa";
-import "./UserDetail.css";
+import "../css/UserDetail.css";
 
 const UserDetail = () => {
   const [users, setUsers] = useState([]);

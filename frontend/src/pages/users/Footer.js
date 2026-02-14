@@ -1,5 +1,5 @@
 import React from "react";
-import "./Auth.css";
+import "../css/Auth.css";
 
 const Footer = () => {
   return (
