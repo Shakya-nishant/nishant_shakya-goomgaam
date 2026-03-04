@@ -1,104 +1,186 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import "../css/ExploreTrek.css";
-
-const treksData = [
-  {
-    id: 1,
-    title: "Everest Base Camp",
-    description:
-      "A thrilling trek to the base of the world's highest mountain.",
-    level: "Hard",
-    cost: "$1200",
-    photo: "https://source.unsplash.com/150x150/?mountain",
-    user: "John Doe",
-  },
-  {
-    id: 2,
-    title: "Annapurna Circuit",
-    description: "Experience diverse landscapes and traditional villages.",
-    level: "Medium",
-    cost: "$900",
-    photo: "https://source.unsplash.com/150x150/?hiking",
-    user: "Jane Smith",
-  },
-  {
-    id: 3,
-    title: "Langtang Valley",
-    description: "A serene trek through lush valleys and snowy peaks.",
-    level: "Easy",
-    cost: "$700",
-    photo: "https://source.unsplash.com/150x150/?valley",
-    user: "Mike Johnson",
-  },
-];
+import axios from "axios";
+import {
+  FaSearch,
+  FaEllipsisV,
+  FaHeart,
+  FaRegComment,
+  FaBookmark,
+} from "react-icons/fa";
 
 const ExploreTrek = () => {
-  const [placeSearch, setPlaceSearch] = useState("");
-  const [costSearch, setCostSearch] = useState("");
-  const [levelSearch, setLevelSearch] = useState("");
+  const [treks, setTreks] = useState([]);
+  const [place, setPlace] = useState("");
+  const [cost, setCost] = useState("");
+  const [level, setLevel] = useState("");
 
-  const filteredTreks = treksData.filter((trek) => {
-    return (
-      trek.title.toLowerCase().includes(placeSearch.toLowerCase()) &&
-      trek.cost.toLowerCase().includes(costSearch.toLowerCase()) &&
-      trek.level.toLowerCase().includes(levelSearch.toLowerCase())
-    );
+  useEffect(() => {
+    fetchTreks();
+  }, []);
+
+  const fetchTreks = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/treks/all"
+      );
+      setTreks(res.data);
+    } catch (error) {
+      console.error("Error fetching treks:", error);
+    }
+  };
+
+  const filteredTreks = treks.filter((trek) => {
+    const totalCost =
+      (trek.travelCost || 0) +
+      (trek.foodCost || 0) +
+      (trek.hotelCost || 0);
+
+    const placeMatch =
+      place.trim() === "" ||
+      trek.locationTags
+        ?.toLowerCase()
+        .includes(place.toLowerCase());
+
+    const costMatch =
+      cost.trim() === "" ||
+      totalCost <= Number(cost);
+
+    const levelMatch =
+      level === "" ||
+      trek.difficulty === level;
+
+    return placeMatch && costMatch && levelMatch;
   });
 
   return (
     <>
       <Navbar />
 
-      <div className="explore-trek-container">
-        <h2>Explore Treks</h2>
+      <div className="explore-wrapper">
+        <h1>Explore Trek</h1>
 
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search by place"
-            value={placeSearch}
-            onChange={(e) => setPlaceSearch(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Search by cost"
-            value={costSearch}
-            onChange={(e) => setCostSearch(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Search by level"
-            value={levelSearch}
-            onChange={(e) => setLevelSearch(e.target.value)}
-          />
+        {/* ================= FILTER SECTION ================= */}
+        <div className="filters">
+          <div className="search-box">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search by place"
+              value={place}
+              onChange={(e) => setPlace(e.target.value)}
+            />
+          </div>
+
+          <div className="search-box">
+            <FaSearch />
+            <input
+              type="number"
+              placeholder="Search by max cost"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+            />
+          </div>
+
+          <div className="search-box select-box">
+            <select
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+            >
+              <option value="">Level</option>
+              <option value="Easy">Easy</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
         </div>
 
-        <div className="trek-list">
-          {filteredTreks.map((trek) => (
-            <div className="trek-card" key={trek.id}>
-              <div className="trek-photo">
-                <img src={trek.photo} alt={trek.title} />
-              </div>
-              <div className="trek-details">
-                <div className="trek-header">
-                  <h3>{trek.title}</h3>
-                  <span className="trek-user">{trek.user}</span>
+        {/* ================= TREK GRID ================= */}
+        <div className="trek-grid">
+          {filteredTreks.length === 0 ? (
+            <p style={{ textAlign: "center" }}>No Treks Found</p>
+          ) : (
+            filteredTreks.map((trek) => {
+              const totalCost =
+                (trek.travelCost || 0) +
+                (trek.foodCost || 0) +
+                (trek.hotelCost || 0);
+
+              const profilePic = trek.user?.profilePic;
+              const fallbackText =
+                trek.user?.name?.charAt(0)?.toUpperCase() || "U";
+
+              return (
+                <div className="trek-card" key={trek._id}>
+                  
+                  {/* HEADER */}
+                  <div className="card-header">
+                    <div className="user-info">
+
+                      {/* ✅ PROFILE CIRCLE */}
+                      <div className="profile-circle">
+                        {profilePic ? (
+                          <img
+                            src={`http://localhost:5000${profilePic}`}
+                            alt="Profile"
+                            className="profile-img"
+                          />
+                        ) : (
+                          <span className="profile-initial">
+                            {fallbackText}
+                          </span>
+                        )}
+                      </div>
+
+                      <span>{trek.user?.name || "Unknown User"}</span>
+                    </div>
+
+                    <FaEllipsisV />
+                  </div>
+
+                  {/* TREK IMAGE */}
+                  <div className="image-slider">
+                    {trek.photos && trek.photos.length > 0 ? (
+                      <img
+                        src={`http://localhost:5000${trek.photos[0]}`}
+                        alt="trek"
+                        className="trek-image"
+                      />
+                    ) : (
+                      <div className="image-placeholder">
+                        No Image Available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CONTENT */}
+                  <div className="card-content">
+                    <h3>{trek.title}</h3>
+                    <p>{trek.description}</p>
+
+                    <div className="meta">
+                      <span>Difficulty: {trek.difficulty}</span>
+                      <span>Total Cost: ₹{totalCost}</span>
+                      <span>Location: {trek.locationTags}</span>
+                    </div>
+                  </div>
+
+                  {/* ACTIONS */}
+                  <div className="card-actions">
+                    <div>
+                      <FaHeart /> 0
+                    </div>
+                    <div>
+                      <FaRegComment /> 0
+                    </div>
+                    <FaBookmark />
+                  </div>
                 </div>
-                <p className="trek-description">{trek.description}</p>
-                <div className="trek-info">
-                  <span>Level: {trek.level}</span>
-                  <span>Cost: {trek.cost}</span>
-                </div>
-                <div className="trek-actions">
-                  <button>👍 Like</button>
-                  <button>💾 Save</button>
-                  <button>💬 Comment</button>
-                </div>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
       </div>
 
