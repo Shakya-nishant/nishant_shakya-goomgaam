@@ -11,7 +11,7 @@ const EditProfile = () => {
     name: "",
     email: "",
     phone: "",
-    emergencyWhatsapp: "",
+    emergencyEmail: "",
     oldPassword: "",
     password: "",
     confirmPassword: "",
@@ -35,7 +35,7 @@ const EditProfile = () => {
           name: res.data.name || "",
           email: res.data.email || "",
           phone: res.data.phone || "",
-          emergencyWhatsapp: res.data.emergencyWhatsapp || "",
+          emergencyEmail: res.data.emergencyEmail || "",
         }));
 
         if (res.data.profilePic) {
@@ -144,10 +144,11 @@ const EditProfile = () => {
           />
 
           <input
-            name="emergencyWhatsapp"
-            value={formData.emergencyWhatsapp}
+            name="emergencyEmail"
+            value={formData.emergencyEmail}
             onChange={handleChange}
-            placeholder="Emergency Number"
+            placeholder="Emergency Email"
+            type="email"
             required
           />
 
@@ -156,6 +157,7 @@ const EditProfile = () => {
             value={formData.email}
             onChange={handleChange}
             placeholder="Email"
+            type="email"
             required
           />
 

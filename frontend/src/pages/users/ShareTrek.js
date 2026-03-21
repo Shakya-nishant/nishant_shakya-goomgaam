@@ -85,15 +85,15 @@ const ShareTrek = () => {
   const [photos, setPhotos] = useState([]);
   const [locationTags, setLocationTags] = useState("");
   const [travelTips, setTravelTips] = useState("");
-  const [climateWarning, setClimateWarning] = useState(false);
-  const [weatherDescription, setWeatherDescription] = useState("");
+  const [days, setDays] = useState("");
+  const [nights, setNights] = useState("");
   const [points, setPoints] = useState([]);
   const [showFullMap, setShowFullMap] = useState(false);
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
 
   const totalCost =
-    Number(travelCost || 0) +
-    Number(foodCost || 0) +
-    Number(hotelCost || 0);
+    Number(travelCost || 0) + Number(foodCost || 0) + Number(hotelCost || 0);
 
   // ---------------- POINT LIMIT FUNCTION ----------------
   const addPoint = (point) => {
@@ -119,26 +119,29 @@ const ShareTrek = () => {
     formData.append("difficulty", difficulty);
     formData.append("locationTags", locationTags);
     formData.append("travelTips", travelTips);
-    formData.append("climateWarning", climateWarning);
-    formData.append("weatherDescription", weatherDescription);
+    formData.append("days", days ? Number(days) : 0);   // 0 if empty
+formData.append("nights", nights ? Number(nights) : 0);
+    formData.append("province", province);
+    formData.append("district", district);
 
-    if (points.length > 0) formData.append("routePoints", JSON.stringify(points));
+    if (points.length > 0)
+      formData.append("routePoints", JSON.stringify(points));
 
     photos.forEach((photo) => formData.append("photos", photo));
 
     try {
-     const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-const res = await axios.post(
-  "http://localhost:5000/api/treks/share",
-  formData,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`, // 🔥 VERY IMPORTANT
-    },
-  }
-);
+      const res = await axios.post(
+        "http://localhost:5000/api/treks/share",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // 🔥 VERY IMPORTANT
+          },
+        },
+      );
       alert(res.data.message);
 
       setTitle("");
@@ -150,8 +153,11 @@ const res = await axios.post(
       setPhotos([]);
       setLocationTags("");
       setTravelTips("");
-      setClimateWarning(false);
-      setWeatherDescription("");
+      setDays("");
+      setNights("");
+      setProvince("");
+      setDistrict("");
+
       setPoints([]);
     } catch (error) {
       console.error(error);
@@ -177,8 +183,8 @@ const res = await axios.post(
             {idx === 0
               ? "Start Point"
               : idx === points.length - 1
-              ? "End Point"
-              : `Point ${idx + 1}`}
+                ? "End Point"
+                : `Point ${idx + 1}`}
           </Popup>
         </Marker>
       ))}
@@ -187,6 +193,119 @@ const res = await axios.post(
       <LocationMarker addPoint={addPoint} />
     </MapContainer>
   );
+
+  const getNightOptions = () => {
+    if (!days) return [];
+    const d = Number(days);
+    return [d - 1, d, d + 1].filter((n) => n > 0);
+  };
+
+  const provinceData = {
+    "Koshi Province": [
+      "Taplejung",
+      "Panchthar",
+      "Ilam",
+      "Jhapa",
+      "Morang",
+      "Sunsari",
+      "Dhankuta",
+      "Terhathum",
+      "Sankhuwasabha",
+      "Bhojpur",
+      "Solukhumbu",
+      "Khotang",
+      "Okhaldhunga",
+      "Udayapur",
+    ],
+    "Madhesh Province": [
+      "Saptari",
+      "Siraha",
+      "Dhanusha",
+      "Mahottari",
+      "Sarlahi",
+      "Rautahat",
+      "Bara",
+      "Parsa",
+    ],
+    "Bagmati Province": [
+      "Dolakha",
+      "Ramechhap",
+      "Sindhuli",
+      "Kavrepalanchok",
+      "Sindhupalchok",
+      "Kathmandu",
+      "Bhaktapur",
+      "Lalitpur",
+      "Nuwakot",
+      "Rasuwa",
+      "Dhading",
+      "Makwanpur",
+      "Chitwan",
+    ],
+    "Gandaki Province": [
+      "Gorkha",
+      "Lamjung",
+      "Tanahun",
+      "Syangja",
+      "Kaski",
+      "Manang",
+      "Mustang",
+      "Myagdi",
+      "Parbat",
+      "Baglung",
+      "Nawalpur (Nawalparasi East)",
+    ],
+    "Lumbini Province": [
+      "Gulmi",
+      "Palpa",
+      "Arghakhanchi",
+      "Rupandehi",
+      "Kapilvastu",
+      "Parasi (Nawalparasi West)",
+      "Pyuthan",
+      "Rolpa",
+      "Eastern Rukum",
+      "Dang",
+      "Banke",
+      "Bardiya",
+    ],
+    "Karnali Province": [
+      "Mugu",
+      "Humla",
+      "Jumla",
+      "Dolpa",
+      "Kalikot",
+      "Jajarkot",
+      "Dailekh",
+      "Surkhet",
+      "Salyan",
+      "Western Rukum",
+    ],
+    "Sudurpashchim Province": [
+      "Bajura",
+      "Bajhang",
+      "Achham",
+      "Doti",
+      "Kailali",
+      "Kanchanpur",
+      "Dadeldhura",
+      "Baitadi",
+      "Darchula",
+    ],
+  };
+
+  const provinceCode = (prov) => {
+    const mapping = {
+      "Koshi Province": "P1",
+      "Madhesh Province": "P2",
+      "Bagmati Province": "P3",
+      "Gandaki Province": "P4",
+      "Lumbini Province": "P5",
+      "Karnali Province": "P6",
+      "Sudurpashchim Province": "P7",
+    };
+    return mapping[prov] || prov;
+  };
 
   return (
     <>
@@ -248,6 +367,37 @@ const res = await axios.post(
               </div>
             </div>
 
+            <div className="days-grid">
+              <div>
+                <label>Total Days</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={days}
+                  onChange={(e) => {
+                    setDays(e.target.value);
+                    setNights(""); // reset nights when days change
+                  }}
+                />
+              </div>
+
+              <div>
+                <label>Total Nights</label>
+                <select
+                  value={nights}
+                  onChange={(e) => setNights(e.target.value)}
+                  disabled={!days}
+                >
+                  <option value="">Select Nights</option>
+                  {getNightOptions().map((n) => (
+                    <option key={n} value={n}>
+                      {n} Night{n > 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <label>Difficulty Level</label>
             <div className="radio-group">
               {["Easy", "Moderate", "Hard"].map((level) => (
@@ -269,10 +419,29 @@ const res = await axios.post(
                 type="file"
                 multiple
                 accept="image/png, image/jpeg"
-                onChange={(e) => setPhotos([...e.target.files])}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files);
+
+                  // Check total count
+                  if (files.length + photos.length > 5) {
+                    alert("You can upload up to 5 images only");
+                    return;
+                  }
+
+                  // Check file size (15MB max)
+                  const oversized = files.find(
+                    (f) => f.size > 15 * 1024 * 1024,
+                  );
+                  if (oversized) {
+                    alert(`"${oversized.name}" exceeds 15MB`);
+                    return;
+                  }
+
+                  setPhotos([...photos, ...files]);
+                }}
               />
               <span>Click to upload or drag and drop</span>
-              <small>PNG, JPG up to 10MB</small>
+              <small>PNG, JPG up to 15MB, max 5 images</small>
             </div>
 
             <label>Location Tags</label>
@@ -283,6 +452,43 @@ const res = await axios.post(
               onChange={(e) => setLocationTags(e.target.value)}
             />
 
+            <div className="location-grid">
+              <div>
+                <label>Province</label>
+                <select
+                  value={province}
+                  onChange={(e) => {
+                    setProvince(e.target.value);
+                    setDistrict("");
+                  }}
+                >
+                  <option value="">Select Province</option>
+                  {Object.keys(provinceData).map((prov) => (
+                    <option key={prov} value={prov}>
+                      {prov}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label>District</label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  disabled={!province}
+                >
+                  <option value="">Select District</option>
+                  {province &&
+                    provinceData[province].map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
             <label>Travel Tips</label>
             <textarea
               rows="3"
@@ -290,24 +496,6 @@ const res = await axios.post(
               value={travelTips}
               onChange={(e) => setTravelTips(e.target.value)}
             />
-
-            <div className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={climateWarning}
-                onChange={(e) => setClimateWarning(e.target.checked)}
-              />
-              <span>Include climate warning</span>
-            </div>
-
-            {climateWarning && (
-              <textarea
-                rows="3"
-                placeholder="Describe weather conditions or warnings..."
-                value={weatherDescription}
-                onChange={(e) => setWeatherDescription(e.target.value)}
-              />
-            )}
 
             <button type="submit" className="main-submit">
               Share Your Trek
@@ -318,20 +506,55 @@ const res = await axios.post(
         <div className="right-column">
           <div className="card preview-card">
             <h3>Live Preview</h3>
-            <div className="preview-image">
-              {photos[0] ? (
-                <img src={URL.createObjectURL(photos[0])} alt="Preview" />
+
+            <div className="preview-images">
+              {photos.length > 0 ? (
+                photos.map((photo, index) => {
+                  const url = URL.createObjectURL(photo);
+                  return (
+                    <div className="img-box" key={index}>
+                      <img src={url} alt={`Preview ${index + 1}`} />
+                      <button
+                        type="button"
+                        className="remove-img"
+                        onClick={() => {
+                          URL.revokeObjectURL(url);
+                          setPhotos(photos.filter((_, i) => i !== index));
+                        }}
+                      >
+                        ✖
+                      </button>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="img-placeholder">Image Preview</div>
+                <div className="img-placeholder">No Images Selected</div>
               )}
             </div>
+
             <h4>{title || "Your Trek Title"}</h4>
             <p className="preview-desc">
               {description || "Your description will appear here..."}
             </p>
+
             <div className="preview-meta">
               <span>Difficulty: {difficulty || "Not set"}</span>
               <span>Total Cost: ₹ {totalCost}</span>
+            </div>
+
+            <div className="preview-extra">
+              {days && nights && (
+                <p>
+                  Duration: {days} Day{days > 1 ? "s" : ""} / {nights} Night
+                  {nights > 1 ? "s" : ""}
+                </p>
+              )}
+
+              {province && district && (
+                <p>
+                  {provinceCode(province)} : {district}
+                </p>
+              )}
             </div>
           </div>
 
@@ -365,10 +588,7 @@ const res = await axios.post(
       {showFullMap && (
         <div className="map-modal">
           <div className="map-modal-content">
-            <button
-              className="close-btn"
-              onClick={() => setShowFullMap(false)}
-            >
+            <button className="close-btn" onClick={() => setShowFullMap(false)}>
               X
             </button>
 

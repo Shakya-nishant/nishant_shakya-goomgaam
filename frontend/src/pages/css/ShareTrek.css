@@ -26,22 +26,48 @@ form label {
   display: block;
 }
 
+/* INPUTS */
 form input,
-form textarea {
+form textarea,
+form select {
   width: 100%;
   margin-top: 6px;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
+  transition: 0.2s;
 }
 
+form input:focus,
+form textarea:focus,
+form select:focus {
+  outline: none;
+  border-color: #10b981;
+  background: #ffffff;
+}
+
+/* COST GRID */
 .cost-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
 }
 
+/* DAYS + NIGHTS */
+.days-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+/* DROPDOWN GROUP (Province + District) */
+select {
+  cursor: pointer;
+}
+
+/* RADIO */
 .radio-group {
   display: flex;
   gap: 20px;
@@ -54,6 +80,7 @@ form textarea {
   gap: 6px;
 }
 
+/* UPLOAD */
 .upload-box {
   border: 2px dashed #d1d5db;
   padding: 25px;
@@ -62,6 +89,11 @@ form textarea {
   margin-top: 8px;
   cursor: pointer;
   position: relative;
+  transition: 0.2s;
+}
+
+.upload-box:hover {
+  border-color: #10b981;
 }
 
 .upload-box input {
@@ -71,21 +103,14 @@ form textarea {
   cursor: pointer;
 }
 
-.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 15px;
-}
-
 /* RIGHT SIDE */
-
 .right-column {
   display: flex;
   flex-direction: column;
   gap: 25px;
 }
 
+/* PREVIEW */
 .preview-image {
   height: 180px;
   background: #e5e7eb;
@@ -119,18 +144,16 @@ form textarea {
   font-size: 14px;
 }
 
+/* MAP */
 .map-box {
   height: 200px;
   border: 2px dashed #d1d5db;
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: #6b7280;
+  overflow: hidden;
   margin-top: 10px;
 }
 
+/* ROUTE BUTTONS */
 .route-buttons {
   display: flex;
   gap: 10px;
@@ -148,12 +171,23 @@ form textarea {
 
 .end-btn {
   background: #ec6b7c;
+  color: white;
   border: none;
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
 }
 
+.full-map-btn {
+  background: #5d8ae4;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* SUBMIT */
 .main-submit {
   width: 100%;
   padding: 14px;
@@ -164,6 +198,12 @@ form textarea {
   font-weight: 600;
   font-size: 16px;
   cursor: pointer;
+  margin-top: 20px;
+  transition: 0.2s;
+}
+
+.main-submit:hover {
+  background: #059669;
 }
 
 .review-text {
@@ -173,23 +213,7 @@ form textarea {
   margin-top: 8px;
 }
 
-/* Responsive */
-
-@media (max-width: 900px) {
-  .share-wrapper {
-    grid-template-columns: 1fr;
-  }
-}
-
-.full-map-btn {
-  background: #5d8ae4;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* MODAL STYLING */
+/* MODAL */
 .map-modal {
   position: fixed;
   inset: 0;
@@ -231,4 +255,60 @@ form textarea {
 .modal-buttons {
   display: flex;
   gap: 10px;
+}
+
+.location-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.preview-images {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.img-box {
+  position: relative;
+}
+
+.img-box img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.remove-img {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .share-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .cost-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .days-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .location-grid {
+    grid-template-columns: 1fr;
+  }
 }

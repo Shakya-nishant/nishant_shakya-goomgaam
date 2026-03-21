@@ -25,21 +25,18 @@ router.post("/signup", upload.single("profilePic"), async (req, res) => {
     name,
     email,
     phone,
-    emergencyWhatsapp,
+    emergencyEmail,
     password,
     confirmPassword,
-    role,
   } = req.body;
 
   try {
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword)
       return res.status(400).json({ message: "Passwords do not match" });
-    }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (existingUser)
       return res.status(400).json({ message: "User already exists" });
-    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -47,9 +44,8 @@ router.post("/signup", upload.single("profilePic"), async (req, res) => {
       name,
       email,
       phone,
-      emergencyWhatsapp,
+      emergencyEmail,
       password: hashedPassword,
-      role: role || "user",
       profilePic: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
@@ -84,7 +80,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" },
+      { expiresIn: "1d" }
     );
 
     res.json({
@@ -102,17 +98,15 @@ router.post("/login", async (req, res) => {
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    if (!authHeader)
       return res.status(401).json({ message: "No token provided" });
-    }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select("-password");
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "User not found" });
-    }
 
     res.json(user);
   } catch (error) {
@@ -124,23 +118,21 @@ router.get("/me", async (req, res) => {
 router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    if (!authHeader)
       return res.status(401).json({ message: "No token provided" });
-    }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id);
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "User not found" });
-    }
 
     const {
       name,
       email,
       phone,
-      emergencyWhatsapp,
+      emergencyEmail,
       oldPassword,
       password,
       confirmPassword,
@@ -149,23 +141,20 @@ router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone) user.phone = phone;
-    if (emergencyWhatsapp) user.emergencyWhatsapp = emergencyWhatsapp;
+    if (emergencyEmail) user.emergencyEmail = emergencyEmail;
 
     if (password || confirmPassword) {
-      if (!oldPassword) {
+      if (!oldPassword)
         return res.status(400).json({ message: "Old password is required" });
-      }
 
       const isMatch = await bcrypt.compare(oldPassword, user.password);
-      if (!isMatch) {
+      if (!isMatch)
         return res.status(400).json({ message: "Old password is incorrect" });
-      }
 
-      if (password !== confirmPassword) {
-        return res
-          .status(400)
-          .json({ message: "New password and confirm password do not match" });
-      }
+      if (password !== confirmPassword)
+        return res.status(400).json({
+          message: "New password and confirm password do not match",
+        });
 
       user.password = await bcrypt.hash(password, 10);
     }
@@ -195,9 +184,8 @@ router.post("/verify-email", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user)
       return res.status(400).json({ message: "Email not found" });
-    }
 
     res.json({ message: "Email verified" });
   } catch (error) {
@@ -211,9 +199,8 @@ router.post("/reset-password", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user)
       return res.status(400).json({ message: "Email not found" });
-    }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
@@ -225,65 +212,39 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-/* ===================== ADMIN ROUTES ===================== */
+/* ================= ADMIN ================= */
 
-// GET all users
 router.get("/all-users", async (req, res) => {
-  try {
-    const users = await User.find().select("-password");
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+  const users = await User.find().select("-password");
+  res.json(users);
 });
 
-// DELETE a user
 router.delete("/delete-user/:id", async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+  await User.findByIdAndDelete(req.params.id);
+  res.json({ message: "User deleted" });
 });
 
-// UPDATE role
 router.put("/update-role/:id", async (req, res) => {
-  try {
-    const { role } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    user.role = role;
-    await user.save();
-    res.json({ message: "Role updated", role: user.role });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+  const user = await User.findById(req.params.id);
+  user.role = req.body.role;
+  await user.save();
+  res.json({ message: "Role updated" });
 });
 
-/* ===================== UPDATE USER DETAILS BY ADMIN ===================== */
 router.put("/update-user/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, email, phone, emergencyWhatsapp, role } = req.body;
+  const { name, email, phone, emergencyEmail, role } = req.body;
 
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+  const user = await User.findById(req.params.id);
 
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
-    if (emergencyWhatsapp) user.emergencyWhatsapp = emergencyWhatsapp;
-    if (role) user.role = role;
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (phone) user.phone = phone;
+  if (emergencyEmail) user.emergencyEmail = emergencyEmail;
+  if (role) user.role = role;
 
-    await user.save();
+  await user.save();
 
-    res.json({ message: "User updated successfully", user });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json({ message: "User updated successfully", user });
 });
 
 module.exports = router;

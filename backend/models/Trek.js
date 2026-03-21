@@ -23,19 +23,30 @@ const trekSchema = new mongoose.Schema(
     locationTags: { type: String },
     travelTips: { type: String },
 
-    climateWarning: { type: Boolean, default: false },
-    weatherDescription: { type: String },
+    days: { type: Number, min: 1, default: 1 },
+    nights: { type: Number, min: 0, default: 0 },
+    province: { type: String, default: "" },
+    district: { type: String, default: "" },
+    provinceCode: { type: String }, // e.g., "P1"
 
     routePoints: [
       {
-        lat: Number,
-        lng: Number,
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
       },
     ],
 
-    photos: [String], // store image path
+    photos: {
+      type: [String], // store image paths
+      validate: [arrayLimit, "{PATH} exceeds the limit of 5 photos"],
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+// Validator for max 5 photos
+function arrayLimit(val) {
+  return val.length <= 5;
+}
 
 module.exports = mongoose.model("Trek", trekSchema);

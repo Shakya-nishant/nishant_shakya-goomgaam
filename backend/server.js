@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./Config/db");
 const path = require("path");
+const rewardRoutes = require("./routes/reward");
 
 dotenv.config();
 
@@ -22,9 +23,13 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const authRoutes = require("./routes/auth");
 const trekRoutes = require("./routes/trek");
 
+// Other imports
+const sosRoutes = require("./routes/sos");
+app.use("/api/sos", sosRoutes);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/treks", trekRoutes);
-
+app.use("/api/reward", rewardRoutes);
 // ================= SERVER =================
 const PORT = process.env.PORT || 5000;
 
