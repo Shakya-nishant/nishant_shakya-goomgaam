@@ -7,71 +7,102 @@ const sendSOSMail = require("../Config/mailer");
 
 router.post("/", async (req, res) => {
   try {
-    console.log("SOS request received:", req.body);
-
     const authHeader = req.headers.authorization;
-    if (!authHeader)
+    if (!authHeader) {
       return res.status(401).json({ message: "No token provided" });
-
-    const token = authHeader.split(" ")[1];
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      console.error("JWT verification failed:", err.message);
-      return res.status(401).json({ message: "Invalid token" });
     }
 
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const { location } = req.body;
-    if (!location) return res.status(400).json({ message: "Location missing" });
+    if (!location) {
+      return res.status(400).json({ message: "Location is required" });
+    }
 
-    // Save SOS in DB
-    const sos = new SOS({
+    // Save SOS
+    const sos = await SOS.create({
       user: user._id,
       emergencyEmail: user.emergencyEmail,
       location,
     });
-    await sos.save();
-    console.log("SOS saved in DB:", sos._id);
 
-    // Prepare email content
-    const htmlContent = `
-      <h2>🚨 SOS Alert</h2>
-      <p>User <strong>${user.name}</strong> has triggered an SOS!</p>
-      <p><strong>Phone:</strong> ${user.phone || "Not provided"}</p>
-      <p><strong>Location:</strong> <a href="${location}" target="_blank">View on Google Maps</a></p>
-      <p><strong>Time:</strong> ${new Date().toLocaleString("en-US", { timeZone: "Asia/Kathmandu" })}</p>
-      <hr>
-      <p style="color: #777; font-size: 12px;">This is an emergency alert from GoomGaam app.</p>
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+        
+        <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          
+          <!-- Logo -->
+         
+
+          <h2 style="color: #d9534f; text-align: center;">🚨 Emergency SOS Alert</h2>
+
+          <p>Dear Concerned Contact,</p>
+
+          <p>
+            This is to formally inform you that an emergency SOS alert has been triggered. 
+            Immediate attention and appropriate action are strongly advised.
+          </p>
+
+          <hr style="margin: 20px 0;">
+
+          <p><strong>User Name:</strong> ${user.name}</p>
+          <p><strong>Phone Number:</strong> ${user.phone || "N/A"}</p>
+          <p>
+            <strong>Location:</strong> 
+            <a href="${location}" style="color: #0275d8;">View on Map</a>
+          </p>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${location}" 
+               style="background-color: #d9534f; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+               View Live Location
+            </a>
+          </div>
+
+          <p>
+            Please respond immediately and ensure the safety of the individual.
+          </p>
+
+          <p style="margin-top: 30px;">
+            Regards,<br>
+            <strong>Your Safety Monitoring System</strong>
+          </p>
+
+        </div>
+      </div>
     `;
 
-    // Send email
-    try {
-      await sendSOSMail({
-        to: user.emergencyEmail,
-        subject: "🚨 SOS Emergency Alert – Immediate Action Required",
-        html: htmlContent,
-      });
-      console.log("Email delivery attempted successfully");
-    } catch (emailError) {
-      console.error(
-        "Email sending failed (but SOS was saved):",
-        emailError.message,
-      );
-      // You can still respond success to frontend since SOS is saved
-    }
-
-    // Always respond success to frontend (email failure is logged)
+  // ✅ Send response immediately
     res.status(200).json({
-      message: "SOS stored successfully",
-      emailSent: true, // you can change to false if you want to be strict
+      message: "SOS triggered successfully",
     });
+
+    // ✅ Send email in background
+    sendSOSMail({
+      to: user.emergencyEmail,
+      subject: "🚨 Emergency SOS Alert",
+      html,
+    })
+      .then(async (result) => {
+        sos.emailSent = result;
+        await sos.save();
+        console.log("✅ Email sent in background");
+      })
+      .catch((err) => {
+        console.error("❌ Email failed:", err.message);
+      });
+
   } catch (error) {
-    console.error("SOS Route Error:", error);
-    res.status(500).json({ message: "Failed to process SOS" });
+    console.error("❌ SOS error:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
