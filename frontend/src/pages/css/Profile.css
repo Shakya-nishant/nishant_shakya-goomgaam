@@ -3,6 +3,7 @@
   min-height: 100vh;
   background: #f7f9fc;
   font-family: "Segoe UI", sans-serif;
+  overflow: hidden;
 }
 
 /* SIDEBAR */
@@ -11,6 +12,8 @@
   background: #ffffff;
   padding: 20px;
   border-right: 1px solid #eee;
+  height: 100vh; /* full height */
+  overflow: hidden; /* no scroll */
 }
 
 .profile-box {
@@ -87,6 +90,8 @@
 .content {
   flex: 1;
   padding: 30px;
+  overflow-y: auto; /* 👈 THIS MAKES IT SCROLLABLE */
+  height: 100vh; /* full height */
 }
 
 .profile-details {
@@ -151,7 +156,9 @@
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .leaderboard-item:hover {
@@ -174,4 +181,749 @@
 .leaderboard-points {
   font-size: 0.8rem;
   color: #555;
+}
+
+.mytrek-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* DETAILS */
+
+.mytrek-details h4 {
+  margin: 0;
+}
+
+.mytrek-details span {
+  font-size: 14px;
+  color: #555;
+}
+
+/* BUTTONS */
+
+.mytrek-buttons button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.map-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* MAIN BOX */
+.map-content {
+  background: #fff;
+  width: 720px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* HEADER */
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  font-weight: bold;
+}
+
+/* DIVIDER */
+.map-divider {
+  height: 2px;
+  background: #000000;
+}
+
+/* INNER BORDER BOX */
+.map-inner-box {
+  margin: 12px;
+  border: 2px solid #ccc;
+  padding: 8px;
+  background: #f9f9f9;
+}
+
+/* MAP SIZE (4:3 RATIO) */
+.map-view {
+  width: 100%;
+  height: 400px; /* 4:3 ratio */
+}
+
+.close-btn {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background-color: red !important;
+  color: white !important;
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.3s ease; /* smooth animation */
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 🔥 Glow effect on hover */
+.close-btn:hover {
+  background: #ff1a1a;
+  transform: scale(1.1);
+
+  /* glow effect */
+  box-shadow:
+    0 0 8px rgba(255, 0, 0, 0.6),
+    0 0 15px rgba(255, 0, 0, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.saved-treks-container {
+  padding: 20px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.saved-treks-header {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #e0e0e0;
+  color: #1f2937;
+}
+
+/* Main Card */
+.saved-trek-card {
+  background: rgb(255, 255, 255);
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* User Info */
+.trek-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.user-pfp {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.username {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1f2937;
+  flex: 1;
+}
+
+.menu-icon {
+  font-size: 24px;
+  font-weight: bold;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.menu-icon:hover {
+  background: #e5e7eb;
+}
+
+/* Content Box */
+.trek-content-box {
+  padding: 16px;
+}
+
+.trek-content {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.trek-image {
+  flex: 1 1 420px;
+  min-width: 300px;
+}
+
+.trek-image img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.no-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #f3f4f6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+/* Details */
+.trek-details {
+  flex: 1 1 380px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trek-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: #1f2937;
+}
+
+.trek-description {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.trek-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14.5px;
+  color: #374151;
+}
+
+.trek-info-grid span {
+  display: flex;
+  gap: 6px;
+  /* justify-content: space-between; */
+}
+
+/* Actions */
+.card-actions {
+  display: flex;
+  gap: 24px;
+  margin: 12px 0;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.action-item:hover {
+  color: #1f2937;
+}
+
+/* View Map Button */
+/* .view-map-btn {
+  margin-top: auto;
+  padding: 10px 20px;
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.2s;
+}
+
+.view-map-btn:hover {
+  background-color: #0284c8;
+  transform: translateY(-1px);
+} */
+
+.action-item {
+  transition: all 0.2s;
+}
+
+.action-item:hover {
+  transform: scale(1.1);
+  color: #1f2937;
+}
+
+.action-item:active {
+  transform: scale(0.95);
+}
+
+.liked-treks-container h3 {
+  border-bottom: 2px solid #333;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.liked-trek-user-pfp {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* .view-map-btn {
+  margin-top: 6px;
+  padding: 6px 12px;
+  border: none;
+  background-color: #4caf50;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+} */
+
+/* .view-map-btn:hover {
+  background-color: #45a049;
+} */
+
+.like-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.like-action span:hover {
+  text-decoration: underline;
+}
+
+.likes-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.like-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.like-user img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.close-popup-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background-color: #1381b4b2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 50%;
+  align-self: center;
+  transition: all 0.2s;
+}
+
+.close-popup-btn:hover {
+  background-color: #0072af;
+}
+
+.liked-treks-container {
+  padding: 20px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+/* My Treks Action Buttons - Uniform Size */
+.my-trek-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.my-trek-buttons button {
+  padding: 11px 20px; /* Same padding for all */
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 130px; /* Ensures similar width */
+  text-align: center;
+}
+
+/* ==================== UNIFIED BUTTON STYLES WITH FIXED HEIGHT ==================== */
+
+/* My Treks Action Buttons Container */
+.my-trek-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* Base style for all buttons - Fixed Height */
+.my-trek-buttons button,
+.view-map-btn {
+  height: 40px;
+  width: 100px; /* Fixed height - easy to adjust */
+  padding: 0 18px; /* Horizontal padding only */
+  font-size: 14.5px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 118px; /* Minimum width */
+  text-align: center;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* View Map Button */
+.view-map-btn {
+  background-color: #0ea5e9;
+  color: white;
+}
+
+.view-map-btn:hover {
+  background-color: #0284c8;
+  transform: translateY(-1px);
+}
+
+/* Edit Button */
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Delete Button */
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+}
+
+/*COMMENT SECTION*/
+/* ==================== COMMENTS POPUP ==================== */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.popup-card {
+  background: white;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+  background: #f8fafc;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+/* Comment List */
+.comment-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 420px;
+}
+
+.comment-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.comment-pfp {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f1f5f9;
+}
+
+.comment-info {
+  flex: 1;
+}
+
+.comment-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.comment-time {
+  font-size: 12.5px;
+  color: #94a3b8;
+  display: block;
+}
+
+.comment-menu {
+  display: flex;
+  gap: 6px;
+}
+
+.comment-menu button {
+  font-size: 13px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.comment-text {
+  margin: 0 0 0 52px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+/* Edit Comment */
+.edit-comment-box {
+  display: flex;
+  gap: 8px;
+  margin-left: 52px;
+}
+
+.edit-comment-box input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+/* Comment Input */
+.comment-input {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  background: #f8fafc;
+}
+
+.comment-input input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.comment-input button {
+  padding: 0 24px;
+  background-color: #0ea5e9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comment-input button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.no-comments {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 30px 0;
+}
+
+/* ==================== DASHBOARD CARD (Top Users) ==================== */
+.dashboard-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-card-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.user-search {
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  width: 280px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.user-search:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* Leaderboard Grid */
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.leaderboard-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.leaderboard-item:hover {
+  background: white;
+  border-color: #e2e8f0;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-info {
+  text-align: center;
+}
+
+.leaderboard-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1f2937;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.leaderboard-points {
+  font-size: 13.5px;
+  color: #0ea5e9;
+  font-weight: 500;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-style: italic;
+  grid-column: 1 / -1;
 }

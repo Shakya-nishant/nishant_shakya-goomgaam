@@ -21,6 +21,16 @@ const ExploreTrek = () => {
   const [weatherData, setWeatherData] = useState({}); // current weather: trekId → object
   const [forecastData, setForecastData] = useState({}); // trekId → daily[] array
   const [activeForecastTrekId, setActiveForecastTrekId] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [showLikes, setShowLikes] = useState(false);
+  const [likesData, setLikesData] = useState([]);
+
+  const [showComments, setShowComments] = useState(false);
+  const [selectedTrek, setSelectedTrek] = useState(null);
+
+  const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedText, setEditedText] = useState("");
 
   const fetchTreks = async () => {
     try {
@@ -36,18 +46,23 @@ const ExploreTrek = () => {
   }, []);
 
   // Filter treks
-  const filteredTreks = treks.filter((trek) => {
-    const totalCost =
-      (trek.travelCost || 0) + (trek.foodCost || 0) + (trek.hotelCost || 0);
-    const placeMatch =
-      !place.trim() ||
-      trek.locationTags?.toLowerCase().includes(place.toLowerCase());
-    const costMatch = !cost.trim() || totalCost <= Number(cost);
-    const levelMatch = !level || trek.difficulty === level;
-    return placeMatch && costMatch && levelMatch;
-  });
+  const filteredTreks = treks
+    .filter((trek) => {
+      const totalCost =
+        (trek.travelCost || 0) + (trek.foodCost || 0) + (trek.hotelCost || 0);
 
-  // Current weather (using 2.5/current endpoint)
+      const placeMatch =
+        !place.trim() ||
+        trek.locationTags?.toLowerCase().includes(place.toLowerCase());
+
+      const costMatch = !cost.trim() || totalCost <= Number(cost);
+      const levelMatch = !level || trek.difficulty === level;
+
+      return placeMatch && costMatch && levelMatch;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // newest first
+    .slice(0, 15); // ⭐ show only 15
+
   const fetchWeather = async (lat, lon) => {
     try {
       const apiKey = "54ae666267f52c91603e09dde04400e6";
@@ -82,15 +97,12 @@ const ExploreTrek = () => {
           },
         },
       );
-
       const list = res.data.list;
 
       // 🔥 Convert 3-hour data → daily data
       const dailyMap = {};
-
       list.forEach((item) => {
         const date = item.dt_txt.split(" ")[0]; // "2026-03-21"
-
         if (!dailyMap[date]) {
           dailyMap[date] = {
             temps: [],
@@ -186,6 +198,100 @@ const ExploreTrek = () => {
     ? forecastData[activeForecastTrekId]
     : null;
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get("http://localhost:5000/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUserId(res.data._id);
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLike = async (trekId) => {
+    const token = localStorage.getItem("token");
+
+    await axios.put(
+      `http://localhost:5000/api/treks/like/${trekId}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    fetchTreks(); // refresh
+  };
+
+  const handleSave = async (trekId) => {
+    const token = localStorage.getItem("token");
+
+    await axios.put(
+      `http://localhost:5000/api/treks/save/${trekId}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    fetchTreks();
+  };
+
+  const openLikes = (trek) => {
+    setLikesData(trek.likes);
+    setShowLikes(true);
+  };
+
+  const openComments = (trek) => {
+    setSelectedTrek(trek);
+    setShowComments(true);
+  };
+
+  const handleAddComment = async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.post(
+      `http://localhost:5000/api/treks/comment/${selectedTrek._id}`,
+      { text: newComment },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    setSelectedTrek({ ...selectedTrek, comments: res.data });
+    setNewComment("");
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    const token = localStorage.getItem("token");
+
+    await axios.delete(
+      `http://localhost:5000/api/treks/comment/${selectedTrek._id}/${commentId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    setSelectedTrek({
+      ...selectedTrek,
+      comments: selectedTrek.comments.filter((c) => c._id !== commentId),
+    });
+  };
+
+  const handleEditComment = async (commentId) => {
+    const token = localStorage.getItem("token");
+
+    await axios.put(
+      `http://localhost:5000/api/treks/comment/${selectedTrek._id}/${commentId}`,
+      { text: editedText },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    setSelectedTrek({
+      ...selectedTrek,
+      comments: selectedTrek.comments.map((c) =>
+        c._id === commentId ? { ...c, text: editedText } : c,
+      ),
+    });
+
+    setEditingCommentId(null);
+  };
+
   return (
     <>
       <Navbar />
@@ -239,63 +345,58 @@ const ExploreTrek = () => {
                   <div
                     className="user-info"
                     onClick={() => navigate(`/profile/${trek.user._id}`)}
+                    style={{ gap: "12px", alignItems: "center" }}
                   >
-                    <div className="profile-circle">
+                    <div
+                      className="profile-circle"
+                      style={{ width: "40px", height: "40px" }}
+                    >
                       {profilePic ? (
                         <img
                           src={`http://localhost:5000${profilePic}`}
                           alt="Profile"
-                          className="profile-img"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: "50%",
+                          }}
                         />
                       ) : (
-                        <span className="profile-initial">{fallbackText}</span>
+                        <span style={{ fontSize: "15px" }}>{fallbackText}</span>
                       )}
                     </div>
-                    <span>{trek.user?.name}</span>
+                    <span
+                      style={{
+                        fontSize: "17px",
+                        fontWeight: 600,
+                        color: "#111827",
+                      }}
+                    >
+                      {trek.user?.name}
+                    </span>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
+                  <div className="header-right">
                     {weather && (
                       <div
                         className="weather-trigger"
                         onClick={() => openForecast(trek)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          cursor: "pointer",
-                          padding: "4px 10px",
-                          borderRadius: "12px",
-                          background: "rgba(0,0,0,0.06)",
-                          transition: "background 0.2s",
-                        }}
                         title="Click to see 7-day forecast"
                       >
                         <img
                           src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
                           alt="weather icon"
-                          style={{ width: "36px", height: "36px" }}
                         />
-                        <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-                          {Math.round(weather.main.temp)}°C
-                        </span>
+                        <span>{Math.round(weather.main.temp)}°C</span>
                       </div>
                     )}
-
-                    <FaEllipsisV
-                      style={{ color: "#6b7280", cursor: "pointer" }}
-                    />
+                    <FaEllipsisV className="menu-icon" />
                   </div>
                 </div>
 
-                {/* Image & Content */}
-                <div className="image-slider">
+                {/* Image */}
+                <div className="image-wrapper">
                   {trek.photos?.length > 0 ? (
                     <img
                       src={`http://localhost:5000${trek.photos[0]}`}
@@ -307,11 +408,12 @@ const ExploreTrek = () => {
                   )}
                 </div>
 
+                {/* Card Content */}
                 <div className="card-content">
                   <h3>{trek.title}</h3>
                   <p>{trek.description}</p>
+
                   <div className="meta">
-                    <span>Difficulty: {trek.difficulty}</span>
                     <span>Total Cost: ₹{totalCost}</span>
                     <span>Location: {trek.locationTags}</span>
                     <span>
@@ -327,14 +429,60 @@ const ExploreTrek = () => {
                   </div>
                 </div>
 
-                <div className="card-actions">
-                  <div>
-                    <FaHeart /> 0
+                {/* Actions */}
+                <div
+                  className="card-actions"
+                  style={{ display: "flex", gap: "18px" }}
+                >
+                  <div
+                    onClick={() => handleLike(trek._id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <FaHeart
+                      style={{
+                        color: trek.likes?.some((u) => u._id === userId)
+                          ? "red"
+                          : "gray",
+                        fontSize: "18px",
+                      }}
+                    />
+                    <span>{trek.likes?.length || 0}</span>
                   </div>
-                  <div>
-                    <FaRegComment /> 0
+
+                  <div
+                    onClick={() => openComments(trek)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <FaRegComment style={{ fontSize: "18px" }} />
+                    <span>{trek.comments?.length || 0}</span>
                   </div>
-                  <FaBookmark />
+
+                  <div
+                    onClick={() => handleSave(trek._id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <FaBookmark
+                      style={{
+                        color: trek.saves?.includes(userId) ? "gold" : "gray",
+                        fontSize: "18px",
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             );
@@ -347,7 +495,7 @@ const ExploreTrek = () => {
         <div className="forecast-modal-overlay" onClick={closeForecast}>
           <div className="forecast-modal" onClick={(e) => e.stopPropagation()}>
             <div className="forecast-header">
-              <h2>7-Day Weather Forecast</h2>
+              <h2>6 Day Weather Forecast</h2>
               <button className="close-btn" onClick={closeForecast}>
                 ×
               </button>
@@ -355,7 +503,7 @@ const ExploreTrek = () => {
 
             {selectedForecast && selectedForecast.length > 0 ? (
               <div className="forecast-grid">
-                {selectedForecast.map((day, index) => (
+                {selectedForecast.slice(0, 6).map((day, index) => (
                   <div key={index} className="forecast-day">
                     <p className="day-name">{formatDate(day.dt)}</p>
                     <img
@@ -374,6 +522,82 @@ const ExploreTrek = () => {
             ) : (
               <div className="loading">Loading forecast...</div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showLikes && (
+        <div className="popup-overlay" onClick={() => setShowLikes(false)}>
+          <div className="popup-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Liked by</h3>
+
+            <div className="likes-list">
+              {likesData.map((user) => (
+                <div key={user._id} className="like-user">
+                  <img src={`http://localhost:5000${user.profilePic}`} alt="" />
+                  <span>{user.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showComments && selectedTrek && (
+        <div className="popup-overlay" onClick={() => setShowComments(false)}>
+          <div className="popup-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Comments</h3>
+
+            <div className="comment-list">
+              {selectedTrek.comments.map((c) => (
+                <div key={c._id} className="comment-item">
+                  <div className="comment-header">
+                    <img
+                      src={`http://localhost:5000${c.user.profilePic}`}
+                      alt=""
+                    />
+                    <span>{c.user.name}</span>
+
+                    {/* MENU */}
+                    {c.user._id === userId && (
+                      <div className="menu">
+                        <button
+                          onClick={() => {
+                            setEditingCommentId(c._id);
+                            setEditedText(c.text);
+                          }}
+                        >
+                          Edit
+                        </button>
+
+                        <button onClick={() => handleDeleteComment(c._id)}>
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {editingCommentId === c._id ? (
+                    <input
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                    />
+                  ) : (
+                    <p>{c.text}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* INPUT */}
+            <div className="comment-input">
+              <input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+              />
+              <button onClick={handleAddComment}>Send</button>
+            </div>
           </div>
         </div>
       )}

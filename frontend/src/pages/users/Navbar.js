@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/GoomGaam Logo.png";
 import "../css/Auth.css";
 
+// ICONS
+import { FaBell, FaComments } from "react-icons/fa";
+
 const Navbar = () => {
   const role = localStorage.getItem("role");
   const [profilePic, setProfilePic] = useState(null);
@@ -45,6 +48,16 @@ const Navbar = () => {
             <Link to="/users">Users</Link>
           </>
         )}
+
+        {/* CHAT ICON */}
+        <Link to="/chat" className="nav-icon">
+          <FaComments />
+        </Link>
+
+        {/* NOTIFICATION ICON */}
+        <Link to="/notifications" className="nav-icon">
+          <FaBell />
+        </Link>
 
         {/* PROFILE ICON */}
         <Link to="/profile" className="profile-link">

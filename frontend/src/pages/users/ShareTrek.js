@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
+
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+
 import {
   MapContainer,
   TileLayer,
@@ -26,39 +29,51 @@ L.Icon.Default.mergeOptions({
 // ---------------- ROUTE CONTROL ----------------
 const RouteControl = ({ points }) => {
   const map = useMap();
-  const routingControlRef = React.useRef(null);
+  const routingRef = React.useRef(null);
 
   React.useEffect(() => {
+    if (!map) return;
     if (!points || points.length < 2) return;
 
-    if (
-      routingControlRef.current &&
-      map &&
-      map.hasLayer(routingControlRef.current)
-    ) {
-      map.removeControl(routingControlRef.current);
+    // 🔴 remove old routing safely
+    if (routingRef.current) {
+      try {
+        map.removeControl(routingRef.current);
+      } catch (err) {}
+      routingRef.current = null;
     }
 
-    routingControlRef.current = L.Routing.control({
-      waypoints: points.map((p) => L.latLng(p[0], p[1])),
-      lineOptions: { styles: [{ color: "blue", weight: 4 }] },
-      routeWhileDragging: false,
-      draggableWaypoints: false,
-      addWaypoints: false,
-      showAlternatives: false,
-      fitSelectedRoutes: true,
-    }).addTo(map);
+    // 🟢 create routing
+    const instance = L.Routing.control({
+      waypoints: points.map(p => L.latLng(p[0], p[1])),
 
+      lineOptions: {
+        styles: [{ color: "blue", weight: 4 }]
+      },
+
+      createMarker: () => null,      // ⭐ VERY IMPORTANT
+      addWaypoints: false,
+      draggableWaypoints: false,
+      routeWhileDragging: false,
+      fitSelectedRoutes: true,
+      show: false                    // ⭐ prevent panel DOM issues
+    });
+
+    instance.addTo(map);
+    routingRef.current = instance;
+
+    // 🟢 SAFE CLEANUP (fixes your crash)
     return () => {
-      if (
-        routingControlRef.current &&
-        map &&
-        map.hasLayer(routingControlRef.current)
-      ) {
-        map.removeControl(routingControlRef.current);
-      }
-      routingControlRef.current = null;
+      if (!routingRef.current) return;
+
+      try {
+        routingRef.current.getPlan().setWaypoints([]); // clear lines safely
+        map.removeControl(routingRef.current);
+      } catch (err) {}
+
+      routingRef.current = null;
     };
+
   }, [points, map]);
 
   return null;
@@ -91,6 +106,9 @@ const ShareTrek = () => {
   const [showFullMap, setShowFullMap] = useState(false);
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const [existingPhotos, setExistingPhotos] = useState([]); // URLs from backend
 
   const totalCost =
     Number(travelCost || 0) + Number(foodCost || 0) + Number(hotelCost || 0);
@@ -110,6 +128,7 @@ const ShareTrek = () => {
   // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -119,49 +138,72 @@ const ShareTrek = () => {
     formData.append("difficulty", difficulty);
     formData.append("locationTags", locationTags);
     formData.append("travelTips", travelTips);
-    formData.append("days", days ? Number(days) : 0);   // 0 if empty
-formData.append("nights", nights ? Number(nights) : 0);
+    formData.append("days", days ? Number(days) : 0);
+    formData.append("nights", nights ? Number(nights) : 0);
     formData.append("province", province);
     formData.append("district", district);
 
-    if (points.length > 0)
+    if (points.length > 0) {
       formData.append("routePoints", JSON.stringify(points));
+    }
 
+    existingPhotos.forEach((url) => formData.append("existingPhotos", url));
     photos.forEach((photo) => formData.append("photos", photo));
 
     try {
       const token = localStorage.getItem("token");
+      let res;
 
-      const res = await axios.post(
-        "http://localhost:5000/api/treks/share",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`, // 🔥 VERY IMPORTANT
+      if (isEditMode) {
+        res = await axios.put(
+          `http://localhost:5000/api/treks/update/${id}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
           },
-        },
-      );
+        );
+      } else {
+        res = await axios.post(
+          "http://localhost:5000/api/treks/share",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+      }
+
       alert(res.data.message);
 
-      setTitle("");
-      setDescription("");
-      setTravelCost("");
-      setFoodCost("");
-      setHotelCost("");
-      setDifficulty("");
-      setPhotos([]);
-      setLocationTags("");
-      setTravelTips("");
-      setDays("");
-      setNights("");
-      setProvince("");
-      setDistrict("");
-
-      setPoints([]);
+      // ✅ Reset all fields after submit
+      if (!isEditMode) {
+        setTitle("");
+        setDescription("");
+        setTravelCost("");
+        setFoodCost("");
+        setHotelCost("");
+        setDifficulty("");
+        setLocationTags("");
+        setTravelTips("");
+        setDays("");
+        setNights("");
+        setProvince("");
+        setDistrict("");
+        setPoints([]);
+        setPhotos([]);
+        setExistingPhotos([]);
+      }
     } catch (error) {
-      console.error(error);
-      alert("Error sharing trek");
+      console.error(
+        "Update error details:",
+        error.response?.data || error.message,
+      );
+      alert(error.response?.data?.message || "Error updating trek");
     }
   };
 
@@ -307,12 +349,75 @@ formData.append("nights", nights ? Number(nights) : 0);
     return mapping[prov] || prov;
   };
 
+  useEffect(() => {
+    // If no id, reset all fields (new trek mode)
+    if (!isEditMode) {
+      setTitle("");
+      setDescription("");
+      setTravelCost("");
+      setFoodCost("");
+      setHotelCost("");
+      setDifficulty("");
+      setLocationTags("");
+      setTravelTips("");
+      setDays("");
+      setNights("");
+      setProvince("");
+      setDistrict("");
+      setPoints([]);
+      setPhotos([]);
+      setExistingPhotos([]);
+    }
+  }, [id]); // run whenever id changes
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const fetchTrek = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(`http://localhost:5000/api/treks/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const trek = res.data;
+
+        setTitle(trek.title || "");
+        setDescription(trek.description || "");
+        setTravelCost(trek.travelCost || "");
+        setFoodCost(trek.foodCost || "");
+        setHotelCost(trek.hotelCost || "");
+        setDifficulty(trek.difficulty || "");
+        setLocationTags(trek.locationTags || "");
+        setTravelTips(trek.travelTips || "");
+        setDays(trek.days || "");
+        setNights(trek.nights || "");
+        setProvince(trek.province || "");
+        setDistrict(trek.district || "");
+
+        // load route points
+        if (trek.routePoints) {
+          setPoints(trek.routePoints);
+        }
+        if (trek.photos && trek.photos.length > 0) {
+          setExistingPhotos(trek.photos); // assume backend returns array of URLs
+        }
+      } catch (err) {
+        console.error("Failed to load trek", err);
+        alert("Failed to load trek data");
+      }
+    };
+
+    fetchTrek();
+  }, [id]);
+
   return (
     <>
       <Navbar />
       <div className="share-wrapper">
         <div className="card form-card">
-          <h2>Share Your Trek</h2>
+          <h2>{isEditMode ? "Update Your Trek" : "Share Your Trek"}</h2>
           <p className="subtitle">
             Help fellow adventurers discover amazing trails by sharing your
             experience
@@ -413,35 +518,26 @@ formData.append("nights", nights ? Number(nights) : 0);
               ))}
             </div>
 
-            <label>Upload Photos</label>
+            <label>Upload Photo</label>
             <div className="upload-box">
               <input
                 type="file"
-                multiple
                 accept="image/png, image/jpeg"
                 onChange={(e) => {
-                  const files = Array.from(e.target.files);
-
-                  // Check total count
-                  if (files.length + photos.length > 5) {
-                    alert("You can upload up to 5 images only");
-                    return;
-                  }
+                  const file = e.target.files[0];
+                  if (!file) return;
 
                   // Check file size (15MB max)
-                  const oversized = files.find(
-                    (f) => f.size > 15 * 1024 * 1024,
-                  );
-                  if (oversized) {
-                    alert(`"${oversized.name}" exceeds 15MB`);
+                  if (file.size > 15 * 1024 * 1024) {
+                    alert(`"${file.name}" exceeds 15MB`);
                     return;
                   }
 
-                  setPhotos([...photos, ...files]);
+                  setPhotos([file]); // only 1 image allowed
                 }}
               />
               <span>Click to upload or drag and drop</span>
-              <small>PNG, JPG up to 15MB, max 5 images</small>
+              <small>PNG, JPG up to 15MB, only 1 image</small>
             </div>
 
             <label>Location Tags</label>
@@ -498,7 +594,7 @@ formData.append("nights", nights ? Number(nights) : 0);
             />
 
             <button type="submit" className="main-submit">
-              Share Your Trek
+              {isEditMode ? "Update Your Trek" : "Share Your Trek"}
             </button>
           </form>
         </div>
@@ -508,27 +604,35 @@ formData.append("nights", nights ? Number(nights) : 0);
             <h3>Live Preview</h3>
 
             <div className="preview-images">
-              {photos.length > 0 ? (
-                photos.map((photo, index) => {
-                  const url = URL.createObjectURL(photo);
-                  return (
-                    <div className="img-box" key={index}>
-                      <img src={url} alt={`Preview ${index + 1}`} />
-                      <button
-                        type="button"
-                        className="remove-img"
-                        onClick={() => {
-                          URL.revokeObjectURL(url);
-                          setPhotos(photos.filter((_, i) => i !== index));
-                        }}
-                      >
-                        ✖
-                      </button>
-                    </div>
-                  );
-                })
+              {existingPhotos.length + photos.length > 0 ? (
+                // Show first image as large 16:9 preview
+                <div className="img-box single">
+                  <img
+                    src={
+                      photos.length > 0
+                        ? URL.createObjectURL(photos[0])
+                        : existingPhotos[0].startsWith("http")
+                          ? existingPhotos[0]
+                          : `http://localhost:5000${existingPhotos[0]}`
+                    }
+                    alt="Trek Preview"
+                  />
+                  <button
+                    type="button"
+                    className="remove-img"
+                    onClick={() => {
+                      if (photos.length > 0) {
+                        setPhotos([]);
+                      } else {
+                        setExistingPhotos(existingPhotos.slice(1));
+                      }
+                    }}
+                  >
+                    ✖
+                  </button>
+                </div>
               ) : (
-                <div className="img-placeholder">No Images Selected</div>
+                <div className="img-placeholder">No Image Selected</div>
               )}
             </div>
 
@@ -586,28 +690,39 @@ formData.append("nights", nights ? Number(nights) : 0);
       </div>
 
       {showFullMap && (
-        <div className="map-modal">
-          <div className="map-modal-content">
-            <button className="close-btn" onClick={() => setShowFullMap(false)}>
-              X
-            </button>
+  <div className="map-modal">
+    <div className="map-content">
 
-            <h3>Full Map View</h3>
-            <div className="big-map">
-              <RenderMap />
-            </div>
+      {/* HEADER */}
+      <div className="map-header">
+        <h3>Mark Trek Route</h3>
+        <button className="close-btn" onClick={() => setShowFullMap(false)}>
+          ×
+        </button>
+      </div>
 
-            <div className="modal-buttons">
-              <button type="button" onClick={resetStart} className="start-btn">
-                Reset Start
-              </button>
-              <button type="button" onClick={resetEnd} className="end-btn">
-                Reset End
-              </button>
-            </div>
-          </div>
+      <div className="map-divider"></div>
+
+      {/* INNER BOX */}
+      <div className="map-inner-box">
+        <div className="map-view">
+          <RenderMap />
         </div>
-      )}
+      </div>
+
+      {/* FOOTER BUTTONS */}
+      <div className="modal-buttons">
+        <button type="button" onClick={resetStart} className="start-btn">
+          Reset Start
+        </button>
+        <button type="button" onClick={resetEnd} className="end-btn">
+          Reset End
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
       <Footer />
     </>
   );

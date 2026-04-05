@@ -9,6 +9,7 @@ import ShareTrek from "./pages/users/ShareTrek";
 import ExploreTrek from "./pages/users/ExploreTrek"; // ✅ import new page
 import UserDetail from "./pages/admin/UserDetail";
 import ProfileTrek from "./pages/users/ProfileTrek";
+import ChatPage from "./pages/users/ChatPage";
 
 function App() {
   return (
@@ -25,10 +26,12 @@ function App() {
         <Route path="/explore-trek" element={<ExploreTrek />} />{" "}
         {/* ✅ new route */}
         <Route path="/share-trek" element={<ShareTrek />} />
+        <Route path="/share-trek/:id" element={<ShareTrek />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/users" element={<UserDetail />} />
         <Route path="/profile/:userId" element={<ProfileTrek />} />
+        <Route path="/chat" element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   );
