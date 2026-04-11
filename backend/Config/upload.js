@@ -1,16 +1,32 @@
+// Config/upload.js
 const multer = require("multer");
 const path = require("path");
 
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");   // make sure this folder exists
+  },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, Date.now() + "-" + file.originalname);
   },
 });
 
 const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  storage: storage,
+  limits: {
+    fileSize: 15 * 1024 * 1024,     // ← Change to 15MB (or higher)
+  },
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only .jpg, .jpeg, and .png files are allowed!"));
+    }
+  },
 });
 
 module.exports = upload;

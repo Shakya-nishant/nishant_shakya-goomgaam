@@ -6,15 +6,18 @@ import Footer from "./Footer";
 import { MdGroupAdd } from "react-icons/md";
 import { FaSearch, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { IoArrowBack } from "react-icons/io5";
 
-const socket = io("http://localhost:5000");
+const socket = io("http://localhost:5000", {
+  autoConnect: true,
+  transports: ["websocket"],
+});
 
 const ChatPage = () => {
   const [activeTab, setActiveTab] = useState("Chat");
   const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [showCreateGroupForm, setShowCreateGroupForm] = useState(false);
   const [isPlanningGroup, setIsPlanningGroup] = useState(false);
-
   const [chats, setChats] = useState([]);
   const [unreadChats, setUnreadChats] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -23,14 +26,11 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Group Form States
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
   const [groupPhoto, setGroupPhoto] = useState(null);
   const [planningDate, setPlanningDate] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
-
   const messageEndRef = useRef(null);
   const token = localStorage.getItem("token");
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -40,8 +40,19 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [editingGroup, setEditingGroup] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [groupParticipants, setGroupParticipants] = useState([]);
+  const [isEditingGroup, setIsEditingGroup] = useState(false);
+  const [editGroupName, setEditGroupName] = useState("");
+  const [editGroupDescription, setEditGroupDescription] = useState("");
+  const [editPlanningDate, setEditPlanningDate] = useState("");
+  const [editPlanningLocation, setEditPlanningLocation] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [requestCount, setRequestCount] = useState(0);
+  const [planningLocation, setPlanningLocation] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // to force refresh after remove/delete
+  const [chatStatus, setChatStatus] = useState({}); // { userId: { hasChat, hasPendingRequest } }
 
-  // Decode JWT to get current user ID
   useEffect(() => {
     if (token) {
       try {
@@ -53,7 +64,15 @@ const ChatPage = () => {
     }
   }, [token]);
 
-  // ================== FETCH DATA ==================
+  const scrollToBottom = (behavior = "smooth") => {
+    setTimeout(() => {
+      messageEndRef.current?.scrollIntoView({
+        behavior,
+        block: "end",
+      });
+    }, 100);
+  };
+
   const fetchChats = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/chat", {
@@ -72,12 +91,18 @@ const ChatPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setUnreadChats(data);
+      setUnreadChats(data || []);
+
+      const totalUnread = data.reduce(
+        (sum, chat) => sum + (chat.unreadCount || 0),
+        0,
+      );
+      setUnreadCount(totalUnread);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching unread:", err);
+      setUnreadChats([]);
     }
   };
-
   const fetchRequests = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/chat/requests", {
@@ -85,12 +110,12 @@ const ChatPage = () => {
       });
       const data = await res.json();
       setPendingRequests(data);
+      setRequestCount(data.length);
     } catch (err) {
       console.error("Error fetching requests:", err);
     }
   };
 
-  // Load data when tab changes
   useEffect(() => {
     if (!token) return;
     if (activeTab === "Chat") fetchChats();
@@ -98,38 +123,68 @@ const ChatPage = () => {
     if (activeTab === "Request") fetchRequests();
   }, [activeTab, token]);
 
-  // ================== SOCKET.IO ==================
-  // useEffect(() => {
-  //   socket.on("receiveMessage", (msg) => {
-  //     if (selectedChat && msg.chat === selectedChat._id) {
-  //       setMessages((prev) => [...prev, msg]);
-  //     }
-  //     fetchChats(); // Refresh sidebar
-  //   });
+  useEffect(() => {
+    if (!token) return;
+    fetchUnread();
+    fetchRequests();
+  }, [token]);
 
-  //   return () => socket.off("receiveMessage");
-  // }, [selectedChat]);
+  useEffect(() => {
+    if (!currentUserId) return;
 
-  // ================== SEARCH ==================
+    socket.emit("joinUser", currentUserId);
+  }, [currentUserId]);
+
   const handleSearch = async (e) => {
     const q = e.target.value;
     setSearchQuery(q);
+
     if (q.length < 2) {
       setSearchResults([]);
       return;
     }
+
     try {
       const res = await fetch(`http://localhost:5000/api/chat/search?q=${q}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const users = await res.json();
       setSearchResults(users);
+
+      // Check status for each user
+      users.forEach(async (user) => {
+        const statusRes = await fetch(
+          `http://localhost:5000/api/chat/chat-status/${user._id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const status = await statusRes.json();
+
+        setChatStatus((prev) => ({
+          ...prev,
+          [user._id]: status,
+        }));
+      });
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ================== SEND CHAT REQUEST ==================
+  const headerMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showHeaderMenu &&
+        headerMenuRef.current &&
+        !headerMenuRef.current.contains(event.target)
+      ) {
+        setShowHeaderMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showHeaderMenu]);
+
   const sendChatRequest = async (toUserId) => {
     if (!toUserId || !token) return;
 
@@ -140,13 +195,13 @@ const ChatPage = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ to: toUserId }),
+        body: JSON.stringify({ to: toUserId, type: "private" }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("✅ Chat request sent successfully!");
+        alert("Private chat request sent successfully!");
         setSearchQuery("");
         setSearchResults([]);
       } else {
@@ -154,7 +209,7 @@ const ChatPage = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Network error while sending request");
+      alert("Network error");
     }
   };
 
@@ -162,22 +217,36 @@ const ChatPage = () => {
   const openChat = async (chat) => {
     setSelectedChat(chat);
     setActiveTab("Chat");
+    // ⭐ REMOVE CHAT FROM UNREAD LIST INSTANTLY (UI UPDATE)
+    setUnreadChats((prev) => prev.filter((c) => c._id !== chat._id));
+
+    // ⭐ DECREASE RED DOT COUNT
+    setUnreadCount((prev) => Math.max(prev - (chat.unreadCount || 1), 0));
 
     try {
       const res = await fetch(
         `http://localhost:5000/api/chat/${chat._id}/messages`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const msgs = await res.json();
       setMessages(msgs);
+      scrollToBottom("auto");
+
       socket.emit("joinChat", chat._id);
+      // ⭐ tell server messages are read (realtime sync)
+      socket.emit("markAsRead", { chatId: chat._id });
+
+      // Mark as read
+      await fetch(`http://localhost:5000/api/chat/${chat._id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      fetchChats();
     } catch (err) {
-      console.error(err);
+      console.error("Error opening chat:", err);
     }
   };
-
   // ================== SEND MESSAGE ==================
   // ================== SEND MESSAGE ==================
   const sendMessage = () => {
@@ -197,7 +266,7 @@ const ChatPage = () => {
 
     // Add to UI immediately (Optimistic Update)
     setMessages((prev) => [...prev, optimisticMessage]);
-
+    scrollToBottom();
     // Send to server via socket
     socket.emit("sendMessage", {
       chatId: selectedChat._id,
@@ -236,6 +305,7 @@ const ChatPage = () => {
     formData.append("name", groupName);
     formData.append("description", groupDescription);
     formData.append("type", isPlanningGroup ? "planning" : "normal");
+    formData.append("planningLocation", planningLocation); // add this
     if (isPlanningGroup && planningDate)
       formData.append("planningDate", planningDate);
     if (groupPhoto) formData.append("photo", groupPhoto);
@@ -325,52 +395,332 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
-    socket.on("receiveMessage", (msg) => {
-      if (!selectedChat || msg.chat !== selectedChat._id) return;
+    // 📩 NEW MESSAGE RECEIVED
+let readTimeout;
 
-      // Prevent duplicate (if server echoes back our own message)
-      setMessages((prev) => {
-        const alreadyExists = prev.some(
-          (m) =>
-            m._id === msg._id ||
-            (m._id.startsWith("temp-") && m.text === msg.text),
-        );
-        if (alreadyExists) return prev;
+// socket.on("receiveMessage", (msg) => {
+//   const isCurrentChatOpen =
+//   selectedChat && msg.chat.toString() === selectedChat._id.toString();
 
-        return [...prev, msg];
-      });
+//   if (isCurrentChatOpen) {
 
-      fetchChats(); // Refresh sidebar
+//     clearTimeout(readTimeout);
+
+//     readTimeout = setTimeout(async () => {
+//       await fetch(`http://localhost:5000/api/chat/${msg.chat}/read`, {
+//         method: "PUT",
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       fetchUnread();
+//     }, 300);
+
+//     setMessages((prev) => {
+//       const exists = prev.some((m) => m._id === msg._id);
+//       if (exists) return prev;
+//       return [...prev, msg];
+//     });
+
+//     scrollToBottom();
+
+//   } else {
+//   fetchUnread();
+//   fetchChats();
+
+//   // 🔥 FORCE UI REFRESH
+//   setRefreshTrigger((prev) => prev + 1);
+// }
+// });
+
+    // 👥 NEW CHAT REQUEST
+    socket.on("newChatRequest", () => {
+      setRequestCount((prev) => prev + 1);
+      fetchRequests();
     });
 
-    // Keep your edit and delete listeners as they are
-    socket.on("messageEdited", (updatedMsg) => {
-      setMessages((prev) =>
-        prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m)),
-      );
+    // ✅ REQUEST ACCEPTED / REJECTED
+    socket.on("requestUpdated", () => {
+      fetchRequests();
+      fetchChats();
+
+      // decrease red dot if request resolved
+      setRequestCount((prev) => Math.max(prev - 1, 0));
     });
 
-    socket.on("messageDeleted", ({ messageId }) => {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m._id === messageId
-            ? { ...m, text: "This message was unsent", isDeleted: true }
-            : m,
-        ),
-      );
+    socket.on("messagesRead", ({ chatId }) => {
+      setUnreadChats((prev) => prev.filter((chat) => chat._id !== chatId));
+      fetchChats();
     });
+
+//     socket.on("newMessage", (message) => {
+//   const myId = JSON.parse(localStorage.getItem("userInfo"))._id;
+
+//   setChats(prevChats =>
+//     prevChats.map(chat => {
+//       // PRIVATE CHAT
+//       if (!chat.isGroupChat && chat._id === message.chat) {
+//         return {
+//           ...chat,
+//           lastMessage: message,
+//           unreadCount: chat.unreadCount + 1
+//         };
+//       }
+
+//       // GROUP CHAT
+//       if (chat.isGroupChat && chat._id === message.chat) {
+//         // do not count unread if sender is me
+//         if (message.sender._id === myId) return chat;
+
+//         return {
+//           ...chat,
+//           lastMessage: message,
+//           unreadCount: chat.unreadCount + 1
+//         };
+//       }
+
+//       return chat;
+//     })
+//   );
+// });
+
+socket.on("newMessage", async (msg) => {
+  const isCurrentChatOpen =
+    selectedChat && msg.chat.toString() === selectedChat._id.toString();
+
+  const myId = currentUserId;
+
+  // ===============================
+  // 1️⃣ IF CHAT IS OPEN → append message + mark read
+  // ===============================
+  if (isCurrentChatOpen) {
+    setMessages(prev => {
+      const exists = prev.some(m => m._id === msg._id);
+      if (exists) return prev;
+      return [...prev, msg];
+    });
+
+    scrollToBottom();
+
+    // mark as read instantly
+    await fetch(`http://localhost:5000/api/chat/${msg.chat}/read`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    socket.emit("markAsRead", { chatId: msg.chat });
+
+    // remove from unread tab instantly
+    setUnreadChats(prev => prev.filter(c => c._id !== msg.chat));
+  }
+
+  // ===============================
+  // 2️⃣ UPDATE CHAT SIDEBAR (PRIVATE + GROUP)
+  // ===============================
+  setChats(prevChats =>
+    prevChats.map(chat => {
+      if (chat._id !== msg.chat) return chat;
+
+      // if I sent the message → no unread increment
+      if (msg.sender._id === myId) {
+        return { ...chat, lastMessage: msg };
+      }
+
+      return {
+        ...chat,
+        lastMessage: msg,
+        unreadCount: (chat.unreadCount || 0) + 1,
+      };
+    })
+  );
+
+  // ===============================
+  // 3️⃣ UPDATE UNREAD TAB INSTANTLY
+  // ===============================
+  if (!isCurrentChatOpen && msg.sender._id !== myId) {
+    fetchUnread(); // refresh unread tab instantly
+    setUnreadCount(prev => prev + 1);
+  }
+});
 
     return () => {
       socket.off("receiveMessage");
-      socket.off("messageEdited");
-      socket.off("messageDeleted");
+      socket.off("newChatRequest");
+      socket.off("requestUpdated");
+      socket.off("messagesRead");
+      socket.off("newMessage");
     };
-  }, [selectedChat]);
+  }, [selectedChat, token]);
 
-  // Auto scroll to latest message
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (activeTab === "Unread") {
+      fetchUnread();
+    }
+    if (activeTab === "Request") {
+      fetchRequests();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+  fetchUnread();
+}, [refreshTrigger]);
+
+  const saveGroupEdit = async () => {
+    if (!selectedChat) return;
+
+    const formData = new FormData();
+    if (editGroupName) formData.append("name", editGroupName);
+    if (editGroupDescription !== undefined)
+      formData.append("description", editGroupDescription);
+
+    if (selectedChat.type === "planning") {
+      if (editPlanningDate) formData.append("planningDate", editPlanningDate);
+      if (editPlanningLocation !== undefined)
+        formData.append("planningLocation", editPlanningLocation);
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/chat/group/${selectedChat._id}`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        },
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Group updated successfully!");
+        setSelectedChat(data.chat); // Update current chat
+        setShowGroupInfo(false);
+        setIsEditingGroup(false);
+        fetchChats(); // Refresh sidebar
+      } else {
+        alert(data.message || "Failed to update group");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating group");
+    }
+  };
+
+  // ================== SEND GROUP INVITE ==================
+  const sendGroupInvite = async (userId) => {
+    if (!userId || !selectedChat) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/chat/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: userId,
+          chat: selectedChat._id,
+          type: "group",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Group invite sent successfully!");
+        fetchRequests();
+        if (searchQuery.length >= 2) {
+          handleSearch({ target: { value: searchQuery } });
+        }
+      } else {
+        alert(data.message || "Failed to send invite");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error");
+    }
+  };
+
+  // ================== REMOVE MEMBER ==================
+  const removeMember = async (userIdToRemove) => {
+    if (
+      !selectedChat ||
+      !window.confirm("Are you sure you want to remove this member?")
+    )
+      return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/chat/${selectedChat._id}/members/${userIdToRemove}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Member removed successfully");
+
+        // Refresh participants
+        const participantsRes = await fetch(
+          `http://localhost:5000/api/chat/${selectedChat._id}/participants`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const updatedParticipants = await participantsRes.json();
+
+        setGroupParticipants(updatedParticipants);
+
+        // If current user was removed (shouldn't happen), close group info
+        if (userIdToRemove === currentUserId) {
+          setShowGroupInfo(false);
+          setSelectedChat(null);
+        } else {
+          // Refresh main chat list
+          fetchChats();
+        }
+      } else {
+        alert(data.message || "Failed to remove member");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error removing member");
+    }
+  };
+
+  // ================== DELETE GROUP ==================
+  const deleteGroup = async () => {
+    if (
+      !selectedChat ||
+      !window.confirm(
+        `Are you sure you want to delete the group "${selectedChat.name}"? This action cannot be undone.`,
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/chat/group/${selectedChat._id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (res.ok) {
+        alert("Group deleted successfully");
+        setShowGroupInfo(false);
+        setSelectedChat(null);
+        fetchChats(); // Refresh sidebar
+        setActiveTab("Chat");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to delete group");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting group");
+    }
+  };
 
   return (
     <>
@@ -396,16 +746,15 @@ const ChatPage = () => {
                 className={activeTab === "Request" ? "active" : ""}
                 onClick={() => setActiveTab("Request")}
               >
-                Request{" "}
-                {pendingRequests.length > 0 && (
-                  <span className="red-dot">*</span>
-                )}
+                Request
+                {requestCount > 0 && <span className="red-dot"></span>}
               </button>
               <button
                 className={activeTab === "Unread" ? "active" : ""}
                 onClick={() => setActiveTab("Unread")}
               >
                 Unread
+                {unreadCount > 0 && <span className="red-dot"></span>}
               </button>
 
               <button
@@ -452,93 +801,180 @@ const ChatPage = () => {
                   />
                 </div>
                 <div className="search-results">
-                  {searchResults.map((user) => (
-                    <div key={user._id} className="user-item">
-                      <img
-                        src={
-                          user.profilePic
-                            ? `http://localhost:5000${user.profilePic}`
-                            : "https://via.placeholder.com/42"
-                        }
-                        alt={user.name}
-                        className="avatar small"
-                      />
-                      <div style={{ flex: 1 }}>
-                        <h4>{user.name}</h4>
-                        <p>{user.email}</p>
+                  {searchResults.map((user) => {
+                    const status = chatStatus[user._id] || {};
+                    const hasChat = status.hasChat;
+                    const hasPending = status.hasPendingRequest;
+
+                    return (
+                      <div key={user._id} className="user-item">
+                        <img
+                          src={
+                            user.profilePic
+                              ? `http://localhost:5000${user.profilePic}`
+                              : "https://via.placeholder.com/42"
+                          }
+                          alt={user.name}
+                          className="avatar small"
+                        />
+                        <div style={{ flex: 1 }}>
+                          <h4>{user.name}</h4>
+                        </div>
+
+                        {hasChat ? (
+                          <button
+                            onClick={() => {
+                              // Find the chat and open it
+                              const chat = chats.find(
+                                (c) =>
+                                  !c.isGroup &&
+                                  c.participants.some(
+                                    (p) => p._id === user._id,
+                                  ),
+                              );
+                              if (chat) openChat(chat);
+                            }}
+                            style={{
+                              background: "#2196F3",
+                              color: "white",
+                              border: "none",
+                              padding: "8px 16px",
+                              borderRadius: "6px",
+                              cursor: "pointer",
+                              fontSize: "13px",
+                            }}
+                          >
+                            Open Chat
+                          </button>
+                        ) : hasPending ? (
+                          <button
+                            disabled
+                            style={{
+                              background: "#888",
+                              color: "#ddd",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            Pending
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => sendChatRequest(user._id)}
+                            style={{
+                              background: "#4caf50",
+                              color: "white",
+                              border: "none",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              cursor: "pointer",
+                              fontSize: "13px",
+                            }}
+                          >
+                            Send Request
+                          </button>
+                        )}
                       </div>
-                      <button
-                        onClick={() => sendChatRequest(user._id)}
-                        style={{
-                          background: "#4caf50",
-                          color: "white",
-                          border: "none",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          fontSize: "13px",
-                        }}
-                      >
-                        Send Request
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Chat / Unread List */}
             <div className="user-list">
-              {(activeTab === "Chat"
-                ? chats
-                : activeTab === "Unread"
-                  ? unreadChats
-                  : []
-              ).map((chat) => {
-                const otherUser = !chat.isGroup
-                  ? chat.participants?.find((p) => p._id !== currentUserId)
-                  : null;
+              {activeTab === "Chat" &&
+                chats.map((chat) => {
+                  const otherUser = !chat.isGroup
+                    ? chat.participants?.find((p) => p._id !== currentUserId)
+                    : null;
 
-                return (
-                  <div
-                    key={chat._id}
-                    className={`user-item ${selectedChat?._id === chat._id ? "active" : ""}`}
-                    onClick={() => openChat(chat)}
-                  >
-                    <img
-                      src={
-                        chat.isGroup
-                          ? chat.photo
-                            ? `http://localhost:5000${chat.photo}`
-                            : "https://via.placeholder.com/42?text=Group"
-                          : otherUser?.profilePic
-                            ? `http://localhost:5000${otherUser.profilePic}`
-                            : "https://via.placeholder.com/42"
-                      }
-                      alt=""
-                      className="avatar small"
-                    />
-                    <div>
-                      <h4>
-                        {chat.isGroup
-                          ? chat.name
-                          : otherUser?.name || "Unknown User"}
-                      </h4>
-                      <p>
-                        {chat.lastMessage
-                          ? chat.lastMessage.text.substring(0, 30) + "..."
-                          : "No messages yet"}
-                        {chat.unreadCount > 0 && (
+                  return (
+                    <div
+                      key={chat._id}
+                      className={`user-item ${selectedChat?._id === chat._id ? "active" : ""}`}
+                      onClick={() => openChat(chat)}
+                    >
+                      <img
+                        src={
+                          chat.isGroup
+                            ? chat.photo
+                              ? `http://localhost:5000${chat.photo}`
+                              : "https://via.placeholder.com/42?text=Group"
+                            : otherUser?.profilePic
+                              ? `http://localhost:5000${otherUser.profilePic}`
+                              : "https://via.placeholder.com/42"
+                        }
+                        alt=""
+                        className="avatar small"
+                      />
+                      <div>
+                        <h4>
+                          {chat.isGroup
+                            ? chat.name
+                            : otherUser?.name || "Unknown User"}
+                        </h4>
+                        <p>
+                          {chat.lastMessage
+                            ? chat.lastMessage.text?.substring(0, 30) + "..."
+                            : "No messages yet"}
+                          {chat.unreadCount > 0 && (
+                            <span className="unread-count">
+                              {" "}
+                              ({chat.unreadCount})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {/* Unread Tab */}
+              {activeTab === "Unread" &&
+                unreadChats.map((chat) => {
+                  const otherUser = !chat.isGroup
+                    ? chat.participants?.find((p) => p._id !== currentUserId)
+                    : null;
+
+                  return (
+                    <div
+                      key={chat._id}
+                      className={`user-item ${selectedChat?._id === chat._id ? "active" : ""}`}
+                      onClick={() => openChat(chat)}
+                    >
+                      <img
+                        src={
+                          chat.isGroup
+                            ? chat.photo
+                              ? `http://localhost:5000${chat.photo}`
+                              : "https://via.placeholder.com/42?text=Group"
+                            : otherUser?.profilePic
+                              ? `http://localhost:5000${otherUser.profilePic}`
+                              : "https://via.placeholder.com/42"
+                        }
+                        alt=""
+                        className="avatar small"
+                      />
+                      <div>
+                        <h4>
+                          {chat.isGroup
+                            ? chat.name
+                            : otherUser?.name || "Unknown User"}
+                        </h4>
+                        <p>
+                          {chat.lastMessage
+                            ? chat.lastMessage.text?.substring(0, 30) + "..."
+                            : "No messages yet"}
                           <span className="unread-count">
                             {" "}
                             ({chat.unreadCount})
                           </span>
-                        )}
-                      </p>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
               {/* REQUEST TAB */}
               {activeTab === "Request" &&
@@ -601,90 +1037,150 @@ const ChatPage = () => {
           {/* RIGHT CHAT AREA */}
           <div className="chat-area">
             {showCreateGroupForm ? (
-              <div className="create-group-form">
-                {/* TYPE SWITCH */}
-                <div className="group-type-toggle">
-                  <button
-                    className={!isPlanningGroup ? "active" : ""}
-                    onClick={() => setIsPlanningGroup(false)}
-                  >
-                    Normal
-                  </button>
-                  <button
-                    className={isPlanningGroup ? "active" : ""}
-                    onClick={() => setIsPlanningGroup(true)}
-                  >
-                    Planning
-                  </button>
-                </div>
-
-                {/* IMAGE */}
-                <div className="group-avatar-upload">
-                  <input
-                    type="file"
-                    onChange={(e) => setGroupPhoto(e.target.files[0])}
+              <div className="create-group-wrapper">
+                <div className="create-group-container">
+                  <IoArrowBack
+                    className="back-arrow"
+                    onClick={() => {
+                      setShowCreateGroupForm(false);
+                      setActiveTab("Chat");
+                    }}
                   />
-                </div>
 
-                {/* NAME */}
-                <input
-                  type="text"
-                  placeholder="Group Name"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                />
-
-                {/* DESCRIPTION */}
-                <textarea
-                  placeholder="Group Description"
-                  value={groupDescription}
-                  onChange={(e) => setGroupDescription(e.target.value)}
-                />
-
-                {/* PLANNING FIELDS */}
-                {isPlanningGroup && (
-                  <>
-                    <input placeholder="Planning Location" />
-                    <input
-                      type="datetime-local"
-                      value={planningDate}
-                      onChange={(e) => setPlanningDate(e.target.value)}
-                    />
-                  </>
-                )}
-
-                {/* USER SEARCH */}
-                <div className="user-search-box">
-                  <FaSearch />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    onChange={handleSearch}
-                  />
-                </div>
-
-                {/* USER LIST */}
-                <div className="user-list-scroll">
-                  {searchResults.map((user) => (
-                    <div key={user._id} className="user-item-small">
-                      <span>{user.name}</span>
-                      <button
-                        className="add-user-btn"
-                        onClick={() =>
-                          setSelectedMembers((prev) => [...prev, user._id])
-                        }
-                      >
-                        Add
-                      </button>
+                  <div className="create-group-form">
+                    {/* Header */}
+                    <div className="create-group-header">
+                      <span className="group-type-badge">
+                        {isPlanningGroup
+                          ? "Planning Group Chat"
+                          : "Normal Group Chat"}
+                      </span>
                     </div>
-                  ))}
-                </div>
 
-                {/* ACTIONS */}
-                <button onClick={createGroup}>Create Group</button>
+                    {/* Scrollable Content */}
+                    <div className="create-group-content">
+                      {/* Group Avatar */}
+                      <div className="group-avatar-upload">
+                        <input
+                          type="file"
+                          id="group-photo"
+                          accept="image/*"
+                          onChange={(e) => setGroupPhoto(e.target.files[0])}
+                          style={{ display: "none" }}
+                        />
+                        <label
+                          htmlFor="group-photo"
+                          className="avatar-upload-label"
+                        >
+                          <img
+                            src={
+                              groupPhoto
+                                ? URL.createObjectURL(groupPhoto)
+                                : "https://via.placeholder.com/120?text=Group"
+                            }
+                            alt="Group"
+                            className="group-avatar-preview"
+                          />
+                          <div className="upload-overlay">Change Photo</div>
+                        </label>
+                      </div>
+
+                      {/* Group Name */}
+                      <input
+                        type="text"
+                        placeholder="Group Name"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        className="group-input"
+                      />
+
+                      {/* Description */}
+                      <textarea
+                        placeholder="Group Description (optional)"
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                        className="group-textarea"
+                      />
+
+                      {/* Planning Fields */}
+                      {isPlanningGroup && (
+                        <div className="planning-fields">
+                          <input
+                            type="text"
+                            placeholder="Planning Location"
+                            value={planningLocation}
+                            onChange={(e) =>
+                              setPlanningLocation(e.target.value)
+                            }
+                            className="group-input"
+                          />
+                          <input
+                            type="datetime-local"
+                            value={planningDate}
+                            onChange={(e) => setPlanningDate(e.target.value)}
+                            className="group-input"
+                          />
+                        </div>
+                      )}
+
+                      {/* Add Members - Smaller Search Bar */}
+                      <div className="add-members-section">
+                        <h4>Add Members</h4>
+
+                        {/* Smaller Search Bar */}
+                        <div className="user-search-box small-search">
+                          <FaSearch className="search-icon" />
+                          <input
+                            type="text"
+                            placeholder="Search users to add..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                          />
+                        </div>
+
+                        {searchResults.length > 0 && (
+                          <div className="user-list-scroll">
+                            {searchResults.map((user) => (
+                              <div key={user._id} className="user-item-small">
+                                <img
+                                  src={
+                                    user.profilePic
+                                      ? `http://localhost:5000${user.profilePic}`
+                                      : "https://via.placeholder.com/40"
+                                  }
+                                  alt={user.name}
+                                  className="avatar small"
+                                />
+                                <span>{user.name}</span>
+                                <button
+                                  className="add-user-btn"
+                                  onClick={() =>
+                                    setSelectedMembers((prev) => [
+                                      ...prev,
+                                      user._id,
+                                    ])
+                                  }
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Fixed Create Button */}
+                    <button onClick={createGroup} className="create-group-btn">
+                      Create Group
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : selectedChat ? (
               <>
+                {/* Chat Header */}
+
                 <div className="chat-header">
                   <div className="header-left">
                     <img
@@ -713,44 +1209,75 @@ const ChatPage = () => {
                           )?.name}
                     </h2>
                   </div>
-                  <FaEllipsisV
-                    className="menu-icon"
-                    onClick={() => setShowHeaderMenu(!showHeaderMenu)}
-                  />
 
-                  {showHeaderMenu && (
-                    <div className="header-menu">
-                      {/* PRIVATE CHAT */}
-                      {!selectedChat.isGroup && (
-                        <button
-                          onClick={() => {
-                            const user = selectedChat.participants.find(
-                              (p) => p._id !== currentUserId,
-                            );
-                            navigate(`/profile/${user._id}`);
-                          }}
-                        >
-                          View Profile
-                        </button>
-                      )}
+                  <div className="header-menu-wrapper">
+                    <FaEllipsisV
+                      className="menu-icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowHeaderMenu(!showHeaderMenu);
+                      }}
+                    />
 
-                      {/* GROUP CHAT */}
-                      {selectedChat.isGroup && (
-                        <>
-                          <p>
-                            <strong>Description:</strong>{" "}
-                            {selectedChat.description}
-                          </p>
+                    {/* Small Dropdown Menu */}
 
-                          {selectedChat.admin === currentUserId && (
-                            <button onClick={() => setEditingGroup(true)}>
-                              Edit Group
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
+                    {showHeaderMenu && (
+                      <div ref={headerMenuRef} className="header-menu">
+                        {!selectedChat.isGroup ? (
+                          /* PRIVATE CHAT */
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const user = selectedChat.participants?.find(
+                                (p) => p._id !== currentUserId,
+                              );
+                              if (user) navigate(`/profile/${user._id}`);
+                              setShowHeaderMenu(false);
+                            }}
+                          >
+                            View Profile
+                          </button>
+                        ) : (
+                          /* GROUP CHAT */
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setShowHeaderMenu(false);
+
+                              try {
+                                const res = await fetch(
+                                  `http://localhost:5000/api/chat/${selectedChat._id}/participants`,
+                                  {
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                  },
+                                );
+                                const data = await res.json();
+                                setGroupParticipants(
+                                  Array.isArray(data) ? data : [],
+                                );
+                              } catch (err) {
+                                console.error(
+                                  "Failed to fetch participants",
+                                  err,
+                                );
+                                setGroupParticipants(
+                                  Array.isArray(selectedChat.participants)
+                                    ? selectedChat.participants
+                                    : [],
+                                );
+                              }
+
+                              setShowGroupInfo(true);
+                            }}
+                          >
+                            Group Info
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="chat-body">
@@ -760,10 +1287,11 @@ const ChatPage = () => {
                       msg.sender === currentUserId ||
                       msg.isMine === true; // for optimistic messages
 
-                    const isUnsent = 
-  msg.isDeleted === true || 
-  msg.text === "This message was unsent" ||
-  (msg.text && msg.text.trim() === "This message was unsent");
+                    const isUnsent =
+                      msg.isDeleted === true ||
+                      msg.text === "This message was unsent" ||
+                      (msg.text &&
+                        msg.text.trim() === "This message was unsent");
 
                     const senderPic = msg.sender?.profilePic
                       ? `http://localhost:5000${msg.sender.profilePic}`
@@ -848,6 +1376,7 @@ const ChatPage = () => {
                       </div>
                     );
                   })}
+                  <div ref={messageEndRef} />
                 </div>
                 <div className="chat-input">
                   <input
@@ -867,6 +1396,318 @@ const ChatPage = () => {
             )}
           </div>
         </div>
+
+        {showGroupInfo && selectedChat?.isGroup && (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowGroupInfo(false)}
+          >
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="modal-header">
+                <div className="group-type-header">
+                  <span className="group-type-badge">
+                    {selectedChat.type === "planning"
+                      ? "Planning GC"
+                      : "Normal GC"}
+                  </span>
+                </div>
+                <button
+                  className="close-btn"
+                  onClick={() => {
+                    setShowGroupInfo(false);
+                    setIsEditingGroup(false);
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="group-info-body">
+                {isEditingGroup ? (
+                  /* EDIT MODE */
+                  <div className="edit-group-form">
+                    <input
+                      type="text"
+                      placeholder="Group Name"
+                      value={editGroupName}
+                      onChange={(e) => setEditGroupName(e.target.value)}
+                    />
+                    <textarea
+                      placeholder="Group Description"
+                      value={editGroupDescription}
+                      onChange={(e) => setEditGroupDescription(e.target.value)}
+                    />
+                    {selectedChat.type === "planning" && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Planning Location"
+                          value={editPlanningLocation}
+                          onChange={(e) =>
+                            setEditPlanningLocation(e.target.value)
+                          }
+                        />
+                        <input
+                          type="datetime-local"
+                          value={editPlanningDate}
+                          onChange={(e) => setEditPlanningDate(e.target.value)}
+                        />
+                        <small style={{ color: "#e74c3c" }}>
+                          Planning details can be edited only{" "}
+                          {5 - (selectedChat.planningEditCount || 0)} more
+                          time(s)
+                        </small>
+                      </>
+                    )}
+                    <div className="modal-actions">
+                      <button onClick={() => setIsEditingGroup(false)}>
+                        Cancel
+                      </button>
+                      <button onClick={saveGroupEdit} className="save-btn">
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* VIEW MODE */
+                  <>
+                    <div className="group-avatar-large">
+                      <img
+                        src={
+                          selectedChat.photo
+                            ? `http://localhost:5000${selectedChat.photo}`
+                            : "https://via.placeholder.com/120?text=Group"
+                        }
+                        alt={selectedChat.name}
+                      />
+                    </div>
+                    <h3 className="group-name">{selectedChat.name}</h3>
+
+                    <div className="info-item">
+                      <strong>Description:</strong>
+                      <p>
+                        {selectedChat.description || "No description provided"}
+                      </p>
+                    </div>
+
+                    {selectedChat.type === "planning" && (
+                      <>
+                        <div className="info-item">
+                          <strong>Location:</strong>
+                          <p>
+                            {selectedChat.planningLocation || "Not specified"}
+                          </p>
+                        </div>
+                        <div className="info-item">
+                          <strong>Planning Date:</strong>
+                          <p>
+                            {selectedChat.planningDate
+                              ? new Date(
+                                  selectedChat.planningDate,
+                                ).toLocaleString()
+                              : "Not set"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="info-item">
+                      <strong>Total Members:</strong>
+                      <p>
+                        {selectedChat.participants?.length ||
+                          groupParticipants.length}
+                      </p>
+                    </div>
+
+                    {/* Members List */}
+                    {/* Members List */}
+                    {/* Members List */}
+                    <div className="members-section">
+                      <h4>
+                        Members (
+                        {
+                          (Array.isArray(groupParticipants) &&
+                          groupParticipants.length > 0
+                            ? groupParticipants
+                            : Array.isArray(selectedChat.participants)
+                              ? selectedChat.participants
+                              : []
+                          ).length
+                        }
+                        )
+                      </h4>
+
+                      <div className="participants-list">
+                        {(Array.isArray(groupParticipants) &&
+                        groupParticipants.length > 0
+                          ? groupParticipants
+                          : Array.isArray(selectedChat.participants)
+                            ? selectedChat.participants
+                            : []
+                        ).map((user) => (
+                          <div key={user._id} className="participant-item">
+                            {/* Left Side: Avatar + Name */}
+                            <div className="participant-left">
+                              <img
+                                src={
+                                  user.profilePic
+                                    ? `http://localhost:5000${user.profilePic}`
+                                    : "https://via.placeholder.com/40"
+                                }
+                                alt={user.name}
+                                className="avatar small"
+                              />
+                              <strong>{user.name}</strong>
+                            </div>
+
+                            {/* Right Side: Admin Badge + Remove Button */}
+                            <div className="participant-right">
+                              {user._id === selectedChat.admin?._id && (
+                                <span className="admin-badge">Admin</span>
+                              )}
+
+                              {/* Remove Button - Only visible to Group Admin (not self) */}
+                              {selectedChat.admin?._id === currentUserId &&
+                                user._id !== currentUserId && (
+                                  <button
+                                    className="remove-member-btn"
+                                    onClick={() => removeMember(user._id)}
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Add User Section - Only Admin */}
+                    {selectedChat.admin?._id === currentUserId && (
+                      <div className="add-user-section">
+                        <h4>Add User</h4>
+                        <div className="user-search-box">
+                          <FaSearch className="search-icon" />
+                          <input
+                            type="text"
+                            placeholder="Search users to add..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                          />
+                        </div>
+
+                        {searchResults.length > 0 && (
+                          <div className="search-results">
+                            {searchResults.map((user) => {
+                              // Safe checks
+                              const participantsArray = Array.isArray(
+                                selectedChat.participants,
+                              )
+                                ? selectedChat.participants
+                                : [];
+
+                              const groupParticipantsArray = Array.isArray(
+                                groupParticipants,
+                              )
+                                ? groupParticipants
+                                : [];
+
+                              // Check if user is already a member
+                              const isMember =
+                                participantsArray.some(
+                                  (p) => p._id === user._id,
+                                ) ||
+                                groupParticipantsArray.some(
+                                  (p) => p._id === user._id,
+                                );
+
+                              // Check if request is already sent
+                              const hasPendingRequest = Array.isArray(
+                                pendingRequests,
+                              )
+                                ? pendingRequests.some(
+                                    (req) =>
+                                      req.to?._id === user._id ||
+                                      req.to === user._id,
+                                  )
+                                : false;
+
+                              return (
+                                <div
+                                  key={user._id}
+                                  className="search-result-item"
+                                >
+                                  <img
+                                    src={
+                                      user.profilePic
+                                        ? `http://localhost:5000${user.profilePic}`
+                                        : "https://via.placeholder.com/40"
+                                    }
+                                    alt={user.name}
+                                    className="avatar small"
+                                  />
+                                  <span>{user.name}</span>
+
+                                  <button
+                                    className={`status-btn 
+                  ${isMember ? "member" : ""} 
+                  ${hasPendingRequest ? "requested" : ""}`}
+                                    onClick={() =>
+                                      !isMember &&
+                                      !hasPendingRequest &&
+                                      sendGroupInvite(user._id)
+                                    }
+                                    disabled={isMember || hasPendingRequest}
+                                  >
+                                    {isMember
+                                      ? "Member"
+                                      : hasPendingRequest
+                                        ? "Requested"
+                                        : "Add"}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {!isEditingGroup && selectedChat.admin?._id === currentUserId && (
+                <div className="modal-footer">
+                  <button
+                    className="edit-group-btn"
+                    onClick={() => {
+                      setIsEditingGroup(true);
+                      setEditGroupName(selectedChat.name || "");
+                      setEditGroupDescription(selectedChat.description || "");
+                      setEditPlanningDate(
+                        selectedChat.planningDate
+                          ? new Date(selectedChat.planningDate)
+                              .toISOString()
+                              .slice(0, 16)
+                          : "",
+                      );
+                      setEditPlanningLocation(
+                        selectedChat.planningLocation || "",
+                      );
+                    }}
+                  >
+                    Edit Group
+                  </button>
+
+                  <button className="delete-group-btn" onClick={deleteGroup}>
+                    Delete Group
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />

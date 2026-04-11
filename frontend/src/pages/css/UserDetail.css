@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -7,113 +6,177 @@ body {
 
 .user-detail-container {
   padding: 20px;
-  min-height: calc(
-    100vh - 80px
-  ); /* ensure footer at bottom, adjust 80px if footer is taller */
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
 }
 
-.user-cards {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(250px, 1fr)
-  ); /* 3 cards per row on desktop */
-  gap: 20px;
-  justify-items: center;
+.user-detail-container h2 {
+  margin-bottom: 0;
+  font-size: 22px;
+  color: #222;
 }
 
-/* Cards */
+/* ── Filter ── */
+.filter-container {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0 20px;
+  flex-wrap: wrap;
+}
+.filter-container input,
+.filter-container select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* ── Grid: exactly 4 per row ── */
+.user-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+/* ── Card ── */
 .user-card {
   background: #fff;
-  border-radius: 10px;
-  padding: 15px;
-  width: 100%;
-  max-width: 250px; /* ensures responsive size */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 18px 16px 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Card top: PFP + name centered ── */
+.card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #222;
   text-align: center;
 }
 
-/* Profile pic */
-.profile-pic img,
-.modal-profile-pic img {
-  width: 80px;
-  height: 80px;
+/* ── Profile picture ── */
+.profile-pic {
+  display: flex;
+  justify-content: center;
+}
+
+.profile-pic img {
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 10px;
+  border: 2px solid #424242;   /* small border on PFP */
+  padding: 2px;
+  background: #fff;
 }
 
 .profile-initials {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background-color: #2196f3;
-  color: white;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
-  margin: 0 auto 10px;
+  border: 3px solid #1565c0;
 }
 
-/* Card text */
-.user-card h3 {
-  margin: 10px 0 5px 0;
+/* ── Info list - left aligned ── */
+.user-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.user-card p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #555;
+.user-info-list p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+  text-align: left;
+  word-break: break-all;
 }
 
-/* Actions */
+.info-icon {
+  color: #2196f3;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.sos-icon {
+  color: #e53935;
+}
+
+/* ── Role badge ── */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.role-admin {
+  background: #fde68a;
+  color: #92400e;
+}
+.role-user {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* ── Action buttons ── */
 .user-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  gap: 5px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
-.user-actions button {
+.btn-view,
+.btn-edit,
+.btn-delete {
   flex: 1;
-  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
   font-size: 12px;
+  font-weight: 500;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
+.btn-view   { background: #4caf50; color: #fff; }
+.btn-edit   { background: #2196f3; color: #fff; }
+.btn-delete { background: #f44336; color: #fff; }
+.btn-view:hover,
+.btn-edit:hover,
+.btn-delete:hover { opacity: 0.85; }
 
-.user-actions button:hover {
-  opacity: 0.8;
-}
-
-.user-actions button:first-child {
-  background-color: #4caf50;
-  color: white;
-}
-
-.user-actions button:nth-child(2) {
-  background-color: #2196f3;
-  color: white;
-}
-
-.user-actions button:last-child {
-  background-color: #f44336;
-  color: white;
-}
-
-/* Modal */
+/* ── Modal ── */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,18 +186,31 @@ body {
 .modal {
   background: #fff;
   border-radius: 10px;
-  padding: 20px;
-  width: 350px;
-  max-width: 90%;
-  text-align: center;
+  padding: 24px 20px;
+  width: 370px;
+  max-width: 92%;
 }
 
 .modal-profile-pic {
-  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.modal-profile-pic img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #2196f3;
+  padding: 2px;
 }
 
 .modal-form label {
   display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
   margin-bottom: 10px;
   text-align: left;
 }
@@ -142,62 +218,56 @@ body {
 .modal-form input,
 .modal-form select {
   width: 100%;
-  padding: 6px;
-  margin-top: 3px;
-  margin-bottom: 10px;
+  padding: 7px 8px;
+  margin-top: 4px;
   border-radius: 5px;
   border: 1px solid #ccc;
+  font-size: 13px;
+  box-sizing: border-box;
 }
 
 .modal-buttons {
   display: flex;
-  justify-content: space-between;
   gap: 10px;
+  margin-top: 6px;
 }
 
 .modal-buttons button {
   flex: 1;
   padding: 8px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
 }
-
-.modal-buttons button:first-child {
-  background-color: #4caf50;
-  color: white;
-}
-
-.modal-buttons button:last-child {
-  background-color: #f44336;
-  color: white;
-}
+.modal-buttons button:first-child { background: #4caf50; color: #fff; }
+.modal-buttons button:last-child  { background: #f44336; color: #fff; }
 
 .success-msg {
-  background-color: #4caf50;
-  color: white;
-  padding: 5px 10px;
+  background: #4caf50;
+  color: #fff;
+  padding: 6px 10px;
   border-radius: 5px;
   margin-bottom: 10px;
+  font-size: 13px;
+  text-align: center;
 }
 
-/* Footer fix */
-footer {
-  margin-top: auto; /* pushes footer to bottom */
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
 }
 
-.filter-container {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
+footer { margin-top: auto; }
 
-.filter-container input,
-.filter-container select {
-  padding: 8px 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .user-cards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 750px) {
+  .user-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .user-cards { grid-template-columns: 1fr; }
 }

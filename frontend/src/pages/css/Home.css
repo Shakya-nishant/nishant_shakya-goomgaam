@@ -1,0 +1,523 @@
+/* ====================== HOME PAGE ====================== */
+
+.home-container {
+  background: #f8f9fb;
+  min-height: 100vh;
+}
+
+/* ── HERO ── */
+.home-hero {
+  height: 520px;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+    url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding-left: 80px;
+}
+
+.home-hero-content h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.home-hero-content p {
+  max-width: 520px;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.home-hero-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+/* ── BUTTONS ── */
+.home-btn-primary {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.home-btn-primary:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+}
+
+.home-btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid white;
+  padding: 13px 28px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.home-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.28);
+  
+  transform: translateY(-2px);
+}
+
+
+
+/* ── SOS STRIP (between hero and sections) ── */
+.home-sos-strip {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding: 20px 80px;
+  border-bottom: 3px solid #ef4444;
+}
+
+.home-sos-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.home-sos-strip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-sos-strip-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.home-sos-strip-desc {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+/* ── SOS BUTTON ── */
+.sos-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sos-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.25),
+    0 6px 20px rgba(239, 68, 68, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sos-pulse 2s infinite;
+}
+
+.sos-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 6px rgba(239, 68, 68, 0.3),
+    0 10px 28px rgba(239, 68, 68, 0.5);
+}
+.sos-btn:active:not(:disabled) { transform: scale(0.96); }
+.sos-btn:disabled { cursor: not-allowed; opacity: 0.8; }
+
+.sos-btn.sos-success {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.25), 0 6px 20px rgba(34,197,94,0.4);
+  animation: none;
+  font-size: 1.6rem;
+}
+.sos-btn.sos-error {
+  background: #64748b;
+  box-shadow: 0 0 0 4px rgba(100,116,139,0.2), 0 6px 20px rgba(100,116,139,0.3);
+  animation: none;
+  font-size: 1.4rem;
+}
+
+@keyframes sos-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.5), 0 6px 20px rgba(239,68,68,0.4); }
+  70%  { box-shadow: 0 0 0 14px rgba(239,68,68,0), 0 6px 20px rgba(239,68,68,0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0), 0 6px 20px rgba(239,68,68,0.4); }
+}
+
+.sos-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sos-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* responsive strip */
+@media (max-width: 700px) {
+  .home-sos-strip { padding: 16px 20px; }
+  .home-sos-strip-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
+
+/* ── SECTIONS ── */
+.home-section {
+  padding: 70px 80px;
+}
+
+.home-section-alt {
+  background: #f1f5f9;
+}
+
+.home-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e2937;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.home-section-subtitle {
+  color: #64748b;
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 40px;
+}
+
+.home-no-data {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1rem;
+  grid-column: 1 / -1;
+  padding: 40px 0;
+}
+
+/* ── CARD GRID — always 3 columns ── */
+.home-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+/* ── TREK CARD ── */
+.home-trek-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  border: 1.5px solid #f1f5f9;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-trek-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12);
+  border-color: #bfdbfe;
+}
+
+/* User Row */
+.home-card-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+.home-card-pfp-wrapper {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.home-card-pfp {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.home-card-pfp-fallback {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #22c55e;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.home-card-username {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #1e2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trek Image — 16:10 ratio */
+.home-card-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.home-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.home-trek-card:hover .home-card-image img {
+  transform: scale(1.04);
+}
+
+/* Info Block */
+.home-card-info {
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.home-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e2937;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-card-meta {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.home-card-date {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+/* View All button */
+.home-view-all-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .home-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .home-section {
+    padding: 50px 40px;
+  }
+
+  .home-hero {
+    padding-left: 40px;
+  }
+}
+
+@media (max-width: 700px) {
+  .home-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero {
+    padding: 40px 24px;
+    height: auto;
+    min-height: 400px;
+  }
+
+  .home-hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .home-hero-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .home-section {
+    padding: 40px 20px;
+  }
+}
+
+/* ── SECTION HEADER ROW (title + SOS side by side) ── */
+.home-section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.home-section-header-text {
+  flex: 1;
+}
+
+.home-section-header-text .home-section-title,
+.home-section-header-text .home-section-subtitle {
+  text-align: left;
+  margin-bottom: 6px;
+}
+
+/* ── SOS BUTTON ── */
+.sos-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 24px;
+}
+
+.sos-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.25),
+    0 6px 20px rgba(239, 68, 68, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: sos-pulse 2s infinite;
+}
+
+.sos-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 6px rgba(239, 68, 68, 0.3),
+    0 10px 28px rgba(239, 68, 68, 0.5);
+}
+
+.sos-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.sos-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.sos-btn.sos-success {
+  background: #22c55e;
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.25),
+    0 6px 20px rgba(34, 197, 94, 0.4);
+  animation: none;
+  font-size: 1.6rem;
+}
+
+.sos-btn.sos-error {
+  background: #64748b;
+  box-shadow:
+    0 0 0 4px rgba(100, 116, 139, 0.2),
+    0 6px 20px rgba(100, 116, 139, 0.3);
+  animation: none;
+  font-size: 1.4rem;
+}
+
+/* Pulse ring animation */
+@keyframes sos-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5), 0 6px 20px rgba(239, 68, 68, 0.4); }
+  70%  { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0), 0 6px 20px rgba(239, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 6px 20px rgba(239, 68, 68, 0.4); }
+}
+
+/* Spinner inside button while loading */
+.sos-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Label below button */
+.sos-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ef4444;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}

@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../users/Navbar";
 import Footer from "../users/Footer";
-import { FaEye, FaTrash, FaEdit } from "react-icons/fa";
+import {
+  FaEye, FaTrash, FaEdit,
+  FaEnvelope, FaPhone, FaExclamationTriangle,
+  FaCalendarAlt, FaUserTag
+} from "react-icons/fa";
 import "../css/UserDetail.css";
 
 const UserDetail = () => {
@@ -14,6 +19,7 @@ const UserDetail = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const navigate = useNavigate();
 
   const fetchUsers = async () => {
     try {
@@ -30,24 +36,18 @@ const UserDetail = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
-  // Filter users whenever searchTerm or roleFilter changes
   useEffect(() => {
     let filtered = users;
-
     if (roleFilter !== "all") {
       filtered = filtered.filter((u) => u.role === roleFilter);
     }
-
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter((u) =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        u.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     setFilteredUsers(filtered);
   }, [searchTerm, roleFilter, users]);
 
@@ -66,32 +66,39 @@ const UserDetail = () => {
   };
 
   const handleEdit = (user) => {
-    setSelectedUser(user);
+    setSelectedUser({ ...user });
     setShowModal(true);
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      const { _id, name, email, phone, emergencyWhatsapp, role } = selectedUser;
-      await axios.put(
-        `http://localhost:5000/api/auth/update-user/${_id}`,
-        { name, email, phone, emergencyWhatsapp, role },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+const handleSave = async (e) => {
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem("token");
+    const { _id, name, email, phone, emergencyEmail, role } = selectedUser;
 
-      setUsers(users.map((user) => (user._id === _id ? selectedUser : user)));
-      setSuccessMsg("User details updated successfully!");
+    const res = await axios.put(
+      `http://localhost:5000/api/auth/update-user/${_id}`,
+      { name, email, phone, emergencyEmail, role },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      setTimeout(() => {
-        setShowModal(false);
-        setSuccessMsg("");
-      }, 1500);
-    } catch (error) {
-      console.error("Error updating user", error);
-    }
-  };
+ 
+    const updatedUser = res.data.user;
+
+    setUsers((prev) =>
+      prev.map((u) => (u._id === _id ? { ...u, ...updatedUser } : u))
+    );
+
+    setSuccessMsg("User details updated successfully!");
+    setTimeout(() => {
+      setShowModal(false);
+      setSuccessMsg("");
+    }, 1500);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    alert("Failed to update user. Please try again.");
+  }
+};
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -109,7 +116,6 @@ const UserDetail = () => {
       <div className="user-detail-container">
         <h2>Registered Users</h2>
 
-        {/* Search and Role Filter */}
         <div className="filter-container">
           <input
             type="text"
@@ -117,10 +123,7 @@ const UserDetail = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
+          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="all">All Users</option>
             <option value="admin">Admin</option>
             <option value="user">User</option>
@@ -130,119 +133,99 @@ const UserDetail = () => {
         <div className="user-cards">
           {filteredUsers.map((user) => (
             <div className="user-card" key={user._id}>
-              <div className="profile-pic">
-                {user.profilePic ? (
-                  <img
-                    src={`http://localhost:5000${user.profilePic}`}
-                    alt={user.name}
-                  />
-                ) : (
-                  <div className="profile-initials">
-                    {getInitials(user.name)}
-                  </div>
-                )}
-              </div>
-              <h3>{user.name}</h3>
-              <p>Contact: {user.phone}</p>
-              <p>Email: {user.email}</p>
-              <p>WhatsApp: {user.emergencyWhatsapp}</p>
-              <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
 
+              {/* PFP - centered */}
+              <div className="card-top">
+                <div className="profile-pic">
+                  {user.profilePic ? (
+                    <img src={`http://localhost:5000${user.profilePic}`} alt={user.name} />
+                  ) : (
+                    <div className="profile-initials">{getInitials(user.name)}</div>
+                  )}
+                </div>
+                <h3 className="card-name">{user.name}</h3>
+              </div>
+
+              {/* Info - left aligned */}
+              <div className="user-info-list">
+                <p>
+                  <FaEnvelope className="info-icon" />
+                  <span>{user.email}</span>
+                </p>
+                <p>
+                  <FaPhone className="info-icon" />
+                  <span>{user.phone || "N/A"}</span>
+                </p>
+                <p>
+                  <FaExclamationTriangle className="info-icon sos-icon" />
+                  <span>{user.emergencyEmail || "N/A"}</span>
+                </p>
+                <p>
+                  <FaCalendarAlt className="info-icon" />
+                  <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+                </p>
+                <p>
+                  <FaUserTag className="info-icon" />
+                  <span className={`role-badge role-${user.role}`}>{user.role}</span>
+                </p>
+              </div>
+
+              {/* Buttons */}
               <div className="user-actions">
-                <button onClick={() => alert(JSON.stringify(user, null, 2))}>
+                <button className="btn-view" onClick={() => navigate(`/profile/${user._id}`)}>
                   <FaEye /> View
                 </button>
-                <button onClick={() => handleEdit(user)}>
+                <button className="btn-edit" onClick={() => handleEdit(user)}>
                   <FaEdit /> Edit
                 </button>
-                <button onClick={() => handleDelete(user._id)}>
+                <button className="btn-delete" onClick={() => handleDelete(user._id)}>
                   <FaTrash /> Delete
                 </button>
               </div>
+
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Edit Modal */}
       {showModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal">
+            <h3 style={{ marginBottom: "16px", textAlign: "center" }}>Edit User</h3>
+
             <div className="modal-profile-pic">
               {selectedUser.profilePic ? (
-                <img
-                  src={`http://localhost:5000${selectedUser.profilePic}`}
-                  alt={selectedUser.name}
-                />
+                <img src={`http://localhost:5000${selectedUser.profilePic}`} alt={selectedUser.name} />
               ) : (
-                <div className="profile-initials">
-                  {getInitials(selectedUser.name)}
-                </div>
+                <div className="profile-initials">{getInitials(selectedUser.name)}</div>
               )}
             </div>
 
             <form className="modal-form" onSubmit={handleSave}>
               {successMsg && <div className="success-msg">{successMsg}</div>}
 
-              <label>
-                Name:
-                <input
-                  type="text"
-                  value={selectedUser.name}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, name: e.target.value })
-                  }
-                  required
-                />
+              <label>Name:
+                <input type="text" value={selectedUser.name}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
+                  required />
               </label>
-
-              <label>
-                Gmail:
-                <input
-                  type="email"
-                  value={selectedUser.email}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, email: e.target.value })
-                  }
-                  required
-                />
+              <label>Email:
+                <input type="email" value={selectedUser.email}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
+                  required />
               </label>
-
-              <label>
-                Contact:
-                <input
-                  type="text"
-                  value={selectedUser.phone}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, phone: e.target.value })
-                  }
-                  required
-                />
+              <label>Contact:
+                <input type="text" value={selectedUser.phone || ""}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })} />
               </label>
-
-              <label>
-                SOS:
-                <input
-                  type="text"
-                  value={selectedUser.emergencyWhatsapp}
-                  onChange={(e) =>
-                    setSelectedUser({
-                      ...selectedUser,
-                      emergencyWhatsapp: e.target.value,
-                    })
-                  }
-                  required
-                />
+              <label>SOS Email:
+                <input type="email" value={selectedUser.emergencyEmail || ""}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, emergencyEmail: e.target.value })} />
               </label>
-
-              <label>
-                Role:
-                <select
-                  value={selectedUser.role}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, role: e.target.value })
-                  }
-                >
+              <label>Role:
+                <select value={selectedUser.role}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}>
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -250,9 +233,7 @@ const UserDetail = () => {
 
               <div className="modal-buttons">
                 <button type="submit">Save</button>
-                <button type="button" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
+                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
               </div>
             </form>
           </div>

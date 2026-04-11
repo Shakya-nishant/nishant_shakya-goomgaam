@@ -154,29 +154,26 @@ const ShareTrek = () => {
       const token = localStorage.getItem("token");
       let res;
 
+      const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Do NOT put Content-Type here
+      },
+    };
+
       if (isEditMode) {
-        res = await axios.put(
-          `http://localhost:5000/api/treks/update/${id}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-      } else {
-        res = await axios.post(
-          "http://localhost:5000/api/treks/share",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-      }
+      res = await axios.put(
+        `http://localhost:5000/api/treks/update/${id}`,
+        formData,
+        config
+      );
+    } else {
+      res = await axios.post(
+        "http://localhost:5000/api/treks/share",
+        formData,
+        config
+      );
+    }
 
       alert(res.data.message);
 
@@ -199,12 +196,9 @@ const ShareTrek = () => {
         setExistingPhotos([]);
       }
     } catch (error) {
-      console.error(
-        "Update error details:",
-        error.response?.data || error.message,
-      );
-      alert(error.response?.data?.message || "Error updating trek");
-    }
+    console.error("Full error:", error.response?.data || error);
+    alert(error.response?.data?.message || "Failed to share trek");
+  }
   };
 
   // ---------------- MAP COMPONENT ----------------
@@ -528,10 +522,10 @@ const ShareTrek = () => {
                   if (!file) return;
 
                   // Check file size (15MB max)
-                  if (file.size > 15 * 1024 * 1024) {
-                    alert(`"${file.name}" exceeds 15MB`);
-                    return;
-                  }
+                if (file.size > 15 * 1024 * 1024) {   // 15MB
+  alert("File size must be less than 15MB");
+  return;
+}
 
                   setPhotos([file]); // only 1 image allowed
                 }}

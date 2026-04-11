@@ -13,6 +13,7 @@ import {
   FaBookmark,
   FaHeart,
   FaRegComment,
+  FaEllipsisV,
 } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -52,6 +53,7 @@ const Profile = () => {
   const [showLikedTreks, setShowLikedTreks] = useState(false);
   const [likedTreks, setLikedTreks] = useState([]);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [activeReportTrekId, setActiveReportTrekId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -87,6 +89,7 @@ const Profile = () => {
         // Fetch user's treks
         const resTreks = await axios.get(
           `http://localhost:5000/api/treks/user/${resUser.data._id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setMyTreks(resTreks.data);
       } catch (error) {
@@ -106,6 +109,9 @@ const Profile = () => {
 
   const handleDashboardClick = () => {
     setShowDashboardCard(!showDashboardCard);
+    setShowSavedTreks(false);
+    setShowLikedTreks(false);
+    setShowMyTreks(false);
   };
 
   const handleSearch = (e) => {
@@ -221,6 +227,22 @@ const Profile = () => {
     }
   };
 
+  const handleReport = async (trekId, type) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5000/api/reports/${trekId}`,
+        { type },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      alert("Report submitted successfully!");
+      setActiveReportTrekId(null); // close menu after report
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit report");
+    }
+  };
+
   const handleEditComment = async (commentId) => {
     const token = localStorage.getItem("token");
 
@@ -311,7 +333,12 @@ const Profile = () => {
     }
   };
 
-  fetchSavedTreks();
+  useEffect(() => {
+    if (user) {
+      fetchSavedTreks();
+      fetchLikedTreks();
+    }
+  }, [user]);
 
   const handleSavedTreksClick = () => {
     setShowSavedTreks(!showSavedTreks);
@@ -374,6 +401,29 @@ const Profile = () => {
 
     if (!showLikedTreks) {
       fetchLikedTreks();
+    }
+  };
+
+  const handleDeleteTrek = async (trekId) => {
+    if (!window.confirm("Delete this trek?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/treks/${trekId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Remove trek from state
+      setMyTreks((prev) => prev.filter((t) => t._id !== trekId));
+
+      // Fetch updated reward stats
+      const resStats = await axios.get("http://localhost:5000/api/reward/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStats(resStats.data); // Update reward points immediately
+    } catch (err) {
+      alert("Delete failed");
+      console.error(err);
     }
   };
 
@@ -506,47 +556,49 @@ const Profile = () => {
 
           {/* Dashboard card */}
           {showDashboardCard && (
-  <div className="dashboard-card">
-    <div className="dashboard-card-header">
-      <h3>Top Users</h3>
-      <input
-        type="text"
-        placeholder="Search user..."
-        value={searchQuery}
-        onChange={handleSearch}
-        className="user-search"
-      />
-    </div>
+            <div className="dashboard-card">
+              <div className="dashboard-card-header">
+                <h3>Top Trekers</h3>
+                <input
+                  type="text"
+                  placeholder="Search user..."
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  className="user-search"
+                />
+              </div>
 
-    <div className="leaderboard-grid">
-      {filteredLeaderboard.length === 0 ? (
-        <p className="no-results">No users found.</p>
-      ) : (
-        filteredLeaderboard.map((u) => (
-          <div
-            key={u.userId}
-            className="leaderboard-item"
-            onClick={() => navigate(`/profile/${u.userId}`)}
-          >
-            <img
-              src={
-                u.profilePic
-                  ? `http://localhost:5000${u.profilePic}`
-                  : "https://via.placeholder.com/50"
-              }
-              alt={u.name}
-              className="leaderboard-avatar"
-            />
-            <div className="leaderboard-info">
-              <span className="leaderboard-name">{u.name}</span>
-              <span className="leaderboard-points">{u.points} pts</span>
+              <div className="leaderboard-grid">
+                {filteredLeaderboard.length === 0 ? (
+                  <p className="no-results">No users found.</p>
+                ) : (
+                  filteredLeaderboard.map((u) => (
+                    <div
+                      key={u.userId}
+                      className="leaderboard-item"
+                      onClick={() => navigate(`/profile/${u.userId}`)}
+                    >
+                      <img
+                        src={
+                          u.profilePic
+                            ? `http://localhost:5000${u.profilePic}`
+                            : "https://via.placeholder.com/50"
+                        }
+                        alt={u.name}
+                        className="leaderboard-avatar"
+                      />
+                      <div className="leaderboard-info">
+                        <span className="leaderboard-name">{u.name}</span>
+                        <span className="leaderboard-points">
+                          {u.points} pts
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-)}
+          )}
           {showMyTreks && (
             <div className="saved-treks-container">
               <h2 className="saved-treks-header">My Treks</h2>
@@ -555,7 +607,12 @@ const Profile = () => {
                 <p>No treks shared yet.</p>
               ) : (
                 myTreks.map((trek) => (
-                  <div className="saved-trek-card" key={trek._id}>
+                  <div
+                    className="saved-trek-card"
+                    key={trek._id}
+                    onClick={() => navigate(`/fullpost/${trek._id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
                     {/* User Info Row */}
                     <div className="trek-user-info">
                       <img
@@ -568,7 +625,71 @@ const Profile = () => {
                         className="user-pfp"
                       />
                       <span className="username">{user.name}</span>
-                      <div className="menu-icon">⋮</div>
+                      <div
+                        className="menu-wrapper"
+                        style={{ position: "relative" }}
+                      >
+                        <FaEllipsisV
+                          className="menu-icon"
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevents parent clicks from triggering
+                            setActiveReportTrekId((prev) =>
+                              prev === trek._id ? null : trek._id,
+                            );
+                          }}
+                          style={{ cursor: "pointer" }}
+                        />
+
+                        {activeReportTrekId === trek._id && (
+                          <div className="report-card">
+                            <p style={{ textAlign: "center" }}>
+                              <b>Report Trek</b>
+                            </p>
+                            <ul>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Costing");
+                                }}
+                              >
+                                Fake Costing
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Inaccurate Location");
+                                }}
+                              >
+                                Inaccurate Location
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "AI / fake image");
+                                }}
+                              >
+                                AI / fake image
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Information");
+                                }}
+                              >
+                                Fake Information
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Safety Hazard");
+                                }}
+                              >
+                                Safety Hazard
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Main Trek Content Box */}
@@ -615,7 +736,10 @@ const Profile = () => {
                           <div className="card-actions">
                             <div className="action-item like-action">
                               <div
-                                onClick={() => handleLike(trek._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  handleLike(trek._id);
+                                }}
                                 style={{
                                   cursor: "pointer",
                                   display: "flex",
@@ -635,7 +759,10 @@ const Profile = () => {
                                 />
                               </div>
                               <span
-                                onClick={() => openLikes(trek)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  openLikes(trek);
+                                }}
                                 style={{ cursor: "pointer", fontWeight: "500" }}
                               >
                                 {trek.likes?.length || 0}
@@ -643,7 +770,10 @@ const Profile = () => {
                             </div>
 
                             <div
-                              onClick={() => openComments(trek)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ← ADD THIS
+                                openComments(trek);
+                              }}
                               className="action-item"
                             >
                               <FaRegComment style={{ fontSize: "20px" }} />
@@ -657,7 +787,8 @@ const Profile = () => {
                           <div className="my-trek-buttons">
                             <button
                               className="view-map-btn"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent parent div click
                                 if (
                                   !trek.routePoints ||
                                   trek.routePoints.length < 2
@@ -676,14 +807,23 @@ const Profile = () => {
 
                             <button
                               className="edit-btn"
-                              onClick={() =>
-                                navigate(`/share-trek/${trek._id}`)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent parent div click
+                                navigate(`/share-trek/${trek._id}`);
+                              }}
                             >
                               Edit Trek
                             </button>
 
-                            <button className="delete-btn">Delete Trek</button>
+                            <button
+                              className="delete-btn"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent parent div click
+                                handleDeleteTrek(trek._id);
+                              }}
+                            >
+                              Delete Trek
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -701,7 +841,12 @@ const Profile = () => {
                 <p>No saved treks yet.</p>
               ) : (
                 savedTreks.map((trek) => (
-                  <div className="saved-trek-card" key={trek._id}>
+                  <div
+                    className="saved-trek-card"
+                    key={trek._id}
+                    onClick={() => navigate(`/fullpost/${trek._id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
                     {/* User Info Row */}
                     <div className="trek-user-info">
                       <img
@@ -714,7 +859,71 @@ const Profile = () => {
                         className="user-pfp"
                       />
                       <span className="username">{trek.user.name}</span>
-                      <div className="menu-icon">⋮</div>
+                      <div
+                        className="menu-wrapper"
+                        style={{ position: "relative" }}
+                      >
+                        <FaEllipsisV
+                          className="menu-icon"
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevents parent clicks from triggering
+                            setActiveReportTrekId((prev) =>
+                              prev === trek._id ? null : trek._id,
+                            );
+                          }}
+                          style={{ cursor: "pointer" }}
+                        />
+
+                        {activeReportTrekId === trek._id && (
+                          <div className="report-card">
+                            <p style={{ textAlign: "center" }}>
+                              <b>Report Trek</b>
+                            </p>
+                            <ul>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Costing");
+                                }}
+                              >
+                                Fake Costing
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Inaccurate Location");
+                                }}
+                              >
+                                Inaccurate Location
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "AI / fake image");
+                                }}
+                              >
+                                AI / fake image
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Information");
+                                }}
+                              >
+                                Fake Information
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Safety Hazard");
+                                }}
+                              >
+                                Safety Hazard
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Main Trek Content Box */}
@@ -762,7 +971,10 @@ const Profile = () => {
                             <div className="action-item like-action">
                               {/* Heart Icon - Still only for liking */}
                               <div
-                                onClick={() => handleLike(trek._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  handleLike(trek._id);
+                                }}
                                 style={{
                                   cursor: "pointer",
                                   display: "flex",
@@ -784,7 +996,10 @@ const Profile = () => {
 
                               {/* Like Count - Click to show who liked */}
                               <span
-                                onClick={() => openLikes(trek)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  openLikes(trek);
+                                }}
                                 style={{
                                   cursor: "pointer",
                                   fontWeight: "500",
@@ -796,7 +1011,10 @@ const Profile = () => {
                             </div>
 
                             <div
-                              onClick={() => openComments(trek)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ← ADD THIS
+                                openComments(trek);
+                              }}
                               className="action-item"
                             >
                               <FaRegComment style={{ fontSize: "20px" }} />
@@ -804,7 +1022,10 @@ const Profile = () => {
                             </div>
 
                             <div
-                              onClick={() => handleSave(trek._id)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ← ADD THIS
+                                handleSave(trek._id);
+                              }}
                               className="action-item"
                             >
                               <FaBookmark
@@ -821,7 +1042,8 @@ const Profile = () => {
                           {/* View Map Button */}
                           <button
                             className="view-map-btn"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent parent div click
                               if (
                                 !trek.routePoints ||
                                 trek.routePoints.length < 2
@@ -855,7 +1077,12 @@ const Profile = () => {
                 <p>No liked treks yet.</p>
               ) : (
                 likedTreks.map((trek) => (
-                  <div className="saved-trek-card" key={trek._id}>
+                  <div
+                    className="saved-trek-card"
+                    key={trek._id}
+                    onClick={() => navigate(`/fullpost/${trek._id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
                     {" "}
                     {/* Same card class */}
                     {/* User Info Row */}
@@ -870,7 +1097,71 @@ const Profile = () => {
                         className="user-pfp"
                       />
                       <span className="username">{trek.user.name}</span>
-                      <div className="menu-icon">⋮</div>
+                      <div
+                        className="menu-wrapper"
+                        style={{ position: "relative" }}
+                      >
+                        <FaEllipsisV
+                          className="menu-icon"
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevents parent clicks from triggering
+                            setActiveReportTrekId((prev) =>
+                              prev === trek._id ? null : trek._id,
+                            );
+                          }}
+                          style={{ cursor: "pointer" }}
+                        />
+
+                        {activeReportTrekId === trek._id && (
+                          <div className="report-card">
+                            <p style={{ textAlign: "center" }}>
+                              <b>Report Trek</b>
+                            </p>
+                            <ul>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Costing");
+                                }}
+                              >
+                                Fake Costing
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Inaccurate Location");
+                                }}
+                              >
+                                Inaccurate Location
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "AI / fake image");
+                                }}
+                              >
+                                AI / fake image
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Fake Information");
+                                }}
+                              >
+                                Fake Information
+                              </li>
+                              <li
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReport(trek._id, "Safety Hazard");
+                                }}
+                              >
+                                Safety Hazard
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     {/* Main Content Box */}
                     <div className="trek-content-box">
@@ -916,7 +1207,10 @@ const Profile = () => {
                           <div className="card-actions">
                             <div className="action-item like-action">
                               <div
-                                onClick={() => handleLike(trek._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  handleLike(trek._id);
+                                }}
                                 style={{
                                   cursor: "pointer",
                                   display: "flex",
@@ -936,7 +1230,10 @@ const Profile = () => {
                                 />
                               </div>
                               <span
-                                onClick={() => openLikes(trek)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ← ADD THIS
+                                  openLikes(trek);
+                                }}
                                 style={{ cursor: "pointer", fontWeight: "500" }}
                               >
                                 {trek.likes?.length || 0}
@@ -944,7 +1241,10 @@ const Profile = () => {
                             </div>
 
                             <div
-                              onClick={() => openComments(trek)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ← ADD THIS
+                                openComments(trek);
+                              }}
                               className="action-item"
                             >
                               <FaRegComment style={{ fontSize: "20px" }} />
@@ -952,7 +1252,10 @@ const Profile = () => {
                             </div>
 
                             <div
-                              onClick={() => handleSave(trek._id)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ← ADD THIS
+                                handleSave(trek._id);
+                              }}
                               className="action-item"
                             >
                               <FaBookmark
@@ -969,7 +1272,8 @@ const Profile = () => {
                           {/* View Map Button */}
                           <button
                             className="view-map-btn"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent parent div click
                               if (
                                 !trek.routePoints ||
                                 trek.routePoints.length < 2

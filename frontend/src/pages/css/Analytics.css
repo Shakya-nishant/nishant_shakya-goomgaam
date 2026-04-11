@@ -1,0 +1,739 @@
+/* ====================== MODERN ANALYTICS DASHBOARD ====================== */
+.analytics-dashboard {
+  display: flex;
+  flex: 1;                    
+  min-height: 0;             
+  background: #f8fafc;
+  padding: 24px;
+  gap: 24px;
+  max-width: 100%;
+  margin: 0 auto;
+  height: calc(100vh - 70px);  
+}
+
+.analytics-dashboard .sidebar {
+  width: 290px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 24px 0;
+  border: 1px solid #f1f5f9;
+  flex-shrink: 0;
+  height: 100%;                  
+  overflow-y: auto;                
+}
+
+.analytics-dashboard .sidebar-header {
+  padding: 0 28px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.analytics-dashboard .sidebar-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e2937;
+}
+
+.analytics-dashboard .sidebar-menu li {
+  padding: 16px 28px;
+  font-size: 1.08rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border-left: 4px solid transparent;
+}
+
+.analytics-dashboard .sidebar-menu li:hover {
+  background: #f8fafc;
+  color: #1e2937;
+}
+
+.analytics-dashboard .sidebar-menu li.active {
+  background: #f0f9ff;
+  color: #1e40af;
+  font-weight: 600;
+  border-left-color: #3b82f6;
+}
+
+/* Main Content */
+.analytics-dashboard .main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Content Header */
+.analytics-dashboard .content-header {
+  background: white;
+  padding: 24px 28px;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 90px;
+}
+
+.analytics-dashboard .header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.analytics-dashboard .content-title {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #1e2937;
+}
+
+.analytics-dashboard .content-subtitle {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 1.02rem;
+}
+
+.analytics-dashboard .content-filter .filter-select {
+  padding: 12px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  font-size: 1rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* Data Area */
+.analytics-dashboard .data-area {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  border: 1px solid #f1f5f9;
+  flex: 1;
+  min-height: 520px;
+}
+
+.analytics-dashboard .chart-container {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+}
+
+/* Lists */
+.analytics-dashboard .list-container {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.analytics-dashboard .list-item, .analytics-dashboard .report-item {
+  padding: 18px 0;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.analytics-dashboard .list-item:last-child, .analytics-dashboard .report-item:last-child {
+  border-bottom: none;
+}
+
+.analytics-dashboard .list-item img {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.analytics-dashboard .no-data {
+  text-align: center;
+  color: #64748b;
+  padding: 80px 0;
+  font-size: 1.1rem;
+}
+
+/* Top Posts */
+.analytics-dashboard .top-posts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.analytics-dashboard .top-item {
+  background: #f8fafc;
+  padding: 18px;
+  border-radius: 14px;
+  border-left: 5px solid #3b82f6;
+}
+
+.analytics-dashboard .metric {
+  font-weight: 600;
+  color: #1e40af;
+  margin-top: 6px;
+}
+
+.analytics-dashboard .warn-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.analytics-dashboard .warn-btn:hover {
+  background: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 1080px) {
+  .analytics-dashboard {
+    flex-direction: column;
+  }
+  .analytics-dashboard .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+}
+
+/* ====================== GROUP CARDS GRID - CIRCULAR PFP + BORDER ====================== */
+
+.analytics-dashboard .groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 28px;
+  padding: 10px 0;
+}
+
+.analytics-dashboard .group-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;           /* Added border as requested */
+  padding-bottom: 10px;
+}
+
+.analytics-dashboard .group-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  border-color: #3b82f6;
+}
+
+.analytics-dashboard .group-pfp-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 25px;
+  padding-bottom: 15px;
+  background: white;
+}
+
+.analytics-dashboard .group-card-pfp {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;           /* Made circular */
+  object-fit: cover;
+  border: 4px solid rgb(122, 122, 122);      /* White border inside circle */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-dashboard .group-card-content {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.analytics-dashboard .group-card-name {
+  margin: 0 0 18px 0;
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: #1e2937;
+  line-height: 1.3;
+}
+
+.analytics-dashboard .group-card-info p {
+  margin: 11px 0;
+  color: #475569;
+  font-size: 1.02rem;
+  text-align: left;
+}
+
+.analytics-dashboard .group-card-info strong {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+/* Responsive - Aim for 4 cards per row on large screens */
+@media (min-width: 1400px) {
+  .analytics-dashboard .groups-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .analytics-dashboard .groups-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .analytics-dashboard .groups-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .analytics-dashboard .groups-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* ====================== TREK CARD - FULL CSS ====================== */
+
+/* Container: 2-column grid */
+.top-liked-comment-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: 100%;
+}
+
+/* Column */
+.top-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.top-column h3.section-title {
+  margin: 0 0 16px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.count-badge {
+  font-size: 0.8rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+/* Scrollable list */
+.trek-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.trek-scrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.trek-scrollable::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.trek-scrollable::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.trek-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================= TREK CARD ================= */
+.trek-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  border: 1.5px solid #f1f5f9;
+  padding: 14px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.trek-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  border-color: #bfdbfe;
+}
+
+/* ================= USER ROW ================= */
+.trek-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Wrapper enforces the circle size */
+.user-pfp-wrapper {
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+  min-height: 45px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f1f5f9;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image fills the wrapper perfectly */
+.user-pfp {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  object-fit: contain;
+  object-position: center;  /* focuses on face area */
+  display: block;
+  border-radius: 50%;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1e2937;
+  font-size: 0.95rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= TREK IMAGE 16:10 ================= */
+.trek-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.trek-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.trek-card:hover .trek-image img {
+  transform: scale(1.03);
+}
+
+/* ================= TREK TITLE ================= */
+.trek-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e2937;
+  line-height: 1.35;
+  display: -webkit-box;
+  
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ================= TREK LOCATION ================= */
+.trek-location {
+  color: #475569;
+  font-size: 0.88rem;
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= SHARED DATE ================= */
+.trek-date {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ================= STATS ROW ================= */
+.trek-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1e40af;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.trek-stats span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trek-stats .icon {
+  font-size: 0.88rem;
+  color: #3b82f6;
+}
+
+/* ================= NO DATA ================= */
+.no-data {
+  text-align: center;
+  color: #94a3b8;
+  padding: 60px 0;
+  font-size: 1rem;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1100px) {
+  .top-liked-comment-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .trek-card {
+    padding: 12px;
+  }
+
+  .top-column h3.section-title {
+    font-size: 1.1rem;
+  }
+
+  .trek-title {
+    font-size: 0.95rem;
+  }
+}
+
+
+
+
+
+/* ====================== REPORT CARD NEW UI ====================== */
+.report-card-new {
+  display: grid;
+  grid-template-columns: 200px 1fr 160px;
+  gap: 0;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  border: 1.5px solid #f1f5f9;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.report-card-new:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.11);
+  transform: translateY(-2px);
+}
+
+/* ── LEFT ── */
+.report-left {
+  width: 200px;
+  min-height: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.report-trek-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ── MIDDLE ── */
+.report-middle {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+}
+
+.report-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.report-user-pfp-wrapper {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.report-user-pfp {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.report-user-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-trek-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e2937;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.report-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.report-reason-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.report-count-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+/* ── RIGHT ── */
+.report-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 16px;
+  background: #f8fafc;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  text-align: center;
+}
+
+.action-btn:hover {
+  transform: scale(1.03);
+}
+
+.warn-action-btn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
+}
+
+.warn-action-btn:hover {
+  background: #fde68a;
+}
+
+.delete-action-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+
+.delete-action-btn:hover {
+  background: #fecaca;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .report-card-new {
+    grid-template-columns: 140px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .report-right {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .action-btn {
+    width: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .report-card-new {
+    grid-template-columns: 1fr;
+  }
+
+  .report-left {
+    width: 100%;
+    min-height: 160px;
+  }
+}

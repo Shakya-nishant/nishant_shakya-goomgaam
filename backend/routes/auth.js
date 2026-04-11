@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 
-/* ================= MULTER CONFIG ================= */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -19,16 +18,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-/* ================= SIGNUP ================= */
 router.post("/signup", upload.single("profilePic"), async (req, res) => {
-  const {
-    name,
-    email,
-    phone,
-    emergencyEmail,
-    password,
-    confirmPassword,
-  } = req.body;
+  const { name, email, phone, emergencyEmail, password, confirmPassword } =
+    req.body;
 
   try {
     if (password !== confirmPassword)
@@ -48,9 +40,7 @@ router.post("/signup", upload.single("profilePic"), async (req, res) => {
       password: hashedPassword,
       profilePic: req.file ? `/uploads/${req.file.filename}` : null,
     });
-
     await user.save();
-
     res.status(201).json({
       message: "Signup successful",
       user: {
@@ -64,25 +54,20 @@ router.post("/signup", upload.single("profilePic"), async (req, res) => {
   }
 });
 
-/* ================= LOGIN ================= */
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid email or password" });
-
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
-
     res.json({
       token,
       role: user.role,
@@ -94,7 +79,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/* ================= GET LOGGED IN USER ================= */
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -105,8 +89,7 @@ router.get("/me", async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select("-password");
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json(user);
   } catch (error) {
@@ -125,8 +108,7 @@ router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id);
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const {
       name,
@@ -184,8 +166,7 @@ router.post("/verify-email", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Email not found" });
+    if (!user) return res.status(400).json({ message: "Email not found" });
 
     res.json({ message: "Email verified" });
   } catch (error) {
@@ -199,8 +180,7 @@ router.post("/reset-password", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Email not found" });
+    if (!user) return res.status(400).json({ message: "Email not found" });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
@@ -232,19 +212,23 @@ router.put("/update-role/:id", async (req, res) => {
 });
 
 router.put("/update-user/:id", async (req, res) => {
-  const { name, email, phone, emergencyEmail, role } = req.body;
+  try {
+    const { name, email, phone, emergencyEmail, role } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  const user = await User.findById(req.params.id);
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (emergencyEmail !== undefined) user.emergencyEmail = emergencyEmail;
+    if (role !== undefined) user.role = role;
 
-  if (name) user.name = name;
-  if (email) user.email = email;
-  if (phone) user.phone = phone;
-  if (emergencyEmail) user.emergencyEmail = emergencyEmail;
-  if (role) user.role = role;
-
-  await user.save();
-
-  res.json({ message: "User updated successfully", user });
+    await user.save();
+    res.json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error("Update user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 module.exports = router;

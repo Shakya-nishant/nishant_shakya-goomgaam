@@ -31,6 +31,7 @@ const ExploreTrek = () => {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedText, setEditedText] = useState("");
+  const [activeReportTrekId, setActiveReportTrekId] = useState(null);
 
   const fetchTreks = async () => {
     try {
@@ -141,6 +142,22 @@ const ExploreTrek = () => {
         "Forecast fetch failed:",
         err.response?.data || err.message,
       );
+    }
+  };
+
+  const handleReport = async (trekId, type) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:5000/api/reports/${trekId}`,
+        { type },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      alert("Report submitted successfully!");
+      setActiveReportTrekId(null); // close report card after submission
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit report");
     }
   };
 
@@ -391,7 +408,65 @@ const ExploreTrek = () => {
                         <span>{Math.round(weather.main.temp)}°C</span>
                       </div>
                     )}
-                    <FaEllipsisV className="menu-icon" />
+                    <div
+                      className="menu-wrapper"
+                      style={{ position: "relative" }}
+                    >
+                      <FaEllipsisV
+                        className="menu-icon"
+                        onClick={() =>
+                          setActiveReportTrekId((prev) =>
+                            prev === trek._id ? null : trek._id,
+                          )
+                        }
+                        style={{ cursor: "pointer" }}
+                      />
+
+                      {activeReportTrekId === trek._id && (
+                        <div className="report-card">
+                          <p style={{ textAlign: "center" }}>
+                            <b>Report Trek</b>
+                          </p>
+                          <ul>
+                            <li
+                              onClick={() =>
+                                handleReport(trek._id, "Fake Costing")
+                              }
+                            >
+                              Fake Costing
+                            </li>
+                            <li
+                              onClick={() =>
+                                handleReport(trek._id, "Inaccurate Location")
+                              }
+                            >
+                              Inaccurate Location
+                            </li>
+                            <li
+                              onClick={() =>
+                                handleReport(trek._id, "AI / fake image")
+                              }
+                            >
+                              AI / fake image
+                            </li>
+                            <li
+                              onClick={() =>
+                                handleReport(trek._id, "Fake Information")
+                              }
+                            >
+                              Fake Information
+                            </li>
+                            <li
+                              onClick={() =>
+                                handleReport(trek._id, "Safety Hazard")
+                              }
+                            >
+                              Safety Hazard
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -6,7 +6,7 @@ const sosSchema = new mongoose.Schema({
   location: { type: String, required: true },
   message: { type: String, default: "SOS triggered!" },
   sentAt: { type: Date, default: Date.now },
-  emailSent: { type: Boolean, default: false }, // ← new: track if email succeeded
+  emailSent: { type: Boolean, default: false }, 
 });
 
 module.exports = mongoose.model("SOS", sosSchema);

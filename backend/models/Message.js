@@ -4,12 +4,10 @@ const messageSchema = new mongoose.Schema({
   chat: { type: mongoose.Schema.Types.ObjectId, ref: "Chat", required: true },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   text: { type: String, required: true },
-  isRead: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
-  isDeleted: { type: Boolean, default: false },   // ✅ NEW
-  updatedAt: { type: Date },                      // ✅ NEW
-
-  createdAt: { type: Date, default: Date.now }
+  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  isDeleted: { type: Boolean, default: false },
+  updatedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("Message", messageSchema);

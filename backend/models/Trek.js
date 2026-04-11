@@ -33,9 +33,7 @@ const trekSchema = new mongoose.Schema(
       validate: [arrayLimit, "{PATH} exceeds the limit of 5 photos"],
     },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
     saves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
     comments: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

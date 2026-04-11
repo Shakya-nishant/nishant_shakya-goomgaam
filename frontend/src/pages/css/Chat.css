@@ -1,47 +1,40 @@
-/* ============================================= */
-/* CHAT PAGE WRAPPER                             */
-/* ============================================= */
 .chat-page .chat-container {
   display: flex;
-  height: 90vh;            /* Keep this, or change to min-height: 90vh if needed */
-  background: #f8f9f7;
+  height: 90vh;           /* Keep this */
+  background: #eff1f3c5;
   padding: 20px;
   gap: 20px;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  color: #333;
-  overflow: hidden;        /* ← Add this */
+  overflow: hidden; 
+  align-items: stretch;     
 }
 
-/* ============================================= */
-/* SIDEBAR                                       */
-/* ============================================= */
-.chat-page .sidebar {
-  display: flex;
+.chat-page .chat-container .sidebar {
   width: 30%;
-  height: 90vh; 
+  height: 100%;
   background: #ffffff;
   border-radius: 20px;
   padding: 15px;
+  display: flex;
   flex-direction: column;
-  position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e0e6d9;
-  /*min-height: 0;           /* ← Critical fix */
-  overflow: hidden;        /* Prevents content from breaking out */
+  border: 1px solid #a9a9a9;
+  overflow: hidden;    
+  min-height: 0;      
+
 }
 
-/* TABS */
 .chat-page .tabs {
-  flex-shrink: 0;          /* Tabs never shrink */
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  position: relative;
+                     /* Equal gap between all buttons */
+  margin-bottom: 15px;
+  flex-shrink: 0;     
+  position: relative;         /* Don't shrink */
+  justify-content: space-between;
 }
 
 .chat-page .tabs button {
-  padding: 9px 16px;
+  padding: 10px 16px;
   border-radius: 20px;
   border: none;
   background: #f0f4eb;
@@ -50,6 +43,10 @@
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
+  min-height: 42px;          
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-page .tabs button:hover {
@@ -62,7 +59,11 @@
   font-weight: 600;
 }
 
-/* Red dot */
+.chat-page .tabs button:last-child {
+  
+  min-width: 50px;
+}
+
 .chat-page .red-dot {
   color: #e74c3c;
   font-size: 18px;
@@ -75,11 +76,10 @@
   50% { opacity: 0.4; }
 }
 
-/* Group Menu */
 .chat-page .group-menu {
   position: absolute;
-  top: 55px;
-  right: 10px;
+  top: 50px;
+  right: 0;
   background: white;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
@@ -105,10 +105,8 @@
   background: #f0f7eb;
 }
 
-/* ============================================= */
-/* SEARCH BOX                                    */
-/* ============================================= */
 .chat-page .search-wrapper {
+  flex-shrink: 0;
   margin-bottom: 12px;
 }
 
@@ -147,21 +145,34 @@
 }
 
 .chat-page .search-results {
-  max-height: 300px;
+  max-height: 380px;         
   overflow-y: auto;
+  margin-top: 10px;
 }
 
-/* ============================================= */
-/* USER LIST                                     */
-/* ============================================= */
 .chat-page .user-list {
-  flex: 1 1 auto;          /* Grow and shrink as needed */
-  min-height: 0;           /* ← Critical fix for flex children */
+  flex: 1;                    
+  min-height: 0;              
   overflow-y: auto;
-  padding-right: 5px;
+  padding-right: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;                /* Better spacing */
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #4caf50 #f0f4eb;
+}
+
+.chat-page .user-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-page .user-list::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 20px;
+}
+
+.chat-page .user-list::-webkit-scrollbar-thumb:hover {
+  background: #43a047;
 }
 
 .chat-page .user-item {
@@ -208,9 +219,6 @@
   font-weight: 600;
 }
 
-/* ============================================= */
-/* AVATAR                                        */
-/* ============================================= */
 .chat-page .avatar {
   border-radius: 50%;
   object-fit: cover;
@@ -229,18 +237,17 @@
   height: 42px;
 }
 
-/* ============================================= */
-/* CHAT AREA                                     */
-/* ============================================= */
 .chat-page .chat-area {
-  width: 70%;
+  flex: 1; 
+  height: 100%;                   /* Takes remaining space */
   background: #ffffff;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e0e6d9;
+  border: 1px solid #a9a9a9;
   overflow: hidden;
+  min-height: 0;              /* Important for flex children */
 }
 
 .chat-page .chat-header {
@@ -309,8 +316,8 @@
   border-radius: 18px;
   font-size: 15px;
   display: flex;
-  align-items: center;       /* vertical center */
-  justify-content: center;   /* horizontal center */
+  align-items: center;      
+  justify-content: center;   
 }
 
 .chat-page .message.left .bubble {
@@ -331,7 +338,6 @@
   color: #8a9a8a;
 }
 
-/* Input */
 .chat-page .chat-input {
   display: flex;
   padding: 14px 18px;
@@ -358,6 +364,7 @@
 
 .create-group-form {
   width: 400px;
+  height: 80%;
   margin: 40px auto;
   padding: 25px;
   background: #fff;
@@ -551,4 +558,644 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+
+.header-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.header-menu {
+  position: absolute;
+  top: 120%;           /* ← Increased from 55px to 68px (moved down a bit) */
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  z-index: 300;
+  min-width: 160px;
+  border: 1px solid #e0e6d9;
+  overflow: hidden;
+}
+
+.header-menu button {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  color: #333;
+}
+
+.header-menu button:hover {
+  background: #f0f7eb;
+  color: #4caf50;
+}
+
+.chat-page .chat-header {
+  position: relative;     /* ← Very important */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e6d9;
+}
+
+
+/*GC
+/* ====================== IMPROVED GROUP INFO MODAL ====================== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  width: 460px;
+  max-width: 92%;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  background: #f8f9f7;
+  border-bottom: 1px solid #e0e6d9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-type-badge {
+  background: #4caf50;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.group-info-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.group-avatar-large img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid #4caf50;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.group-name {
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  color: #2c3e2f;
+}
+
+.info-item {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.info-item strong {
+  display: block;
+  color: #555;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.info-item p {
+  margin: 0;
+  color: #333;
+  font-size: 15.5px;
+}
+
+/* Members Section */
+.members-section h4 {
+  margin: 25px 0 12px 0;
+  color: #2c3e2f;
+}
+
+.participants-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.participant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* Pushes left and right apart */
+  padding: 12px 16px;
+  background: #f8f9f7;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.participant-item:hover {
+  background: #f0f4eb;
+}
+
+.participant-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.participant-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-badge {
+  background: #4caf50;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.group-info-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #4caf50 #f0f4eb;
+}
+
+.group-info-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.group-info-body::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 20px;
+}
+
+.user-info strong {
+  font-size: 15px;
+}
+
+/* Add User Section */
+.add-user-section {
+  margin-top: 25px;
+}
+
+.add-user-section h4 {
+  margin-bottom: 10px;
+  color: #2c3e2f;
+}
+
+.user-search-box {
+  display: flex;
+  align-items: center;
+  background: #f0f4eb;
+  border-radius: 30px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+}
+
+.search-icon {
+  color: #666;
+  margin-right: 10px;
+}
+
+.user-search-box input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  outline: none;
+  font-size: 15px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: #f8f9f7;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.add-btn {
+  margin-left: auto;
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.remove-member-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.remove-member-btn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+.remove-member-btn:active {
+  transform: scale(0.95);
+}
+
+/* Edit Mode */
+.edit-group-form input,
+.edit-group-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+}
+
+/* ====================== MODAL FOOTER - EVENLY SPACED BUTTONS ====================== */
+
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e0e6d9;
+  background: #f8f9f7;
+  display: flex;
+  justify-content: space-evenly;     /* Even spacing between buttons */
+  gap: 16px;                         /* Consistent gap */
+  flex-wrap: wrap;                   /* Responsive on small screens */
+}
+
+.edit-group-btn,
+.delete-group-btn {
+  flex: 1;                           /* Both buttons take equal width */
+  padding: 7px 10px;
+  border: none;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 120px;                  /* Ensures buttons don't get too narrow */
+  min-width: 140px;                  /* Prevents buttons from becoming too small */
+}
+
+/* Edit Group Button */
+.edit-group-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.edit-group-btn:hover {
+  background: #43a047;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* Delete Group Button */
+.delete-group-btn {
+  background: #e74c3c;
+  color: white;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.delete-group-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.45);
+}
+
+/* Active / Pressed state */
+.edit-group-btn:active,
+.delete-group-btn:active {
+  transform: scale(0.96);
+}
+
+/* Requested Button Style */
+.add-btn.requested {
+  background: #888 !important;
+  color: #ddd !important;
+  cursor: not-allowed;
+}
+
+.add-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Make search result item better aligned */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9f7;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.search-result-item span {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* Status Buttons in Search Results */
+.status-btn {
+  margin-left: auto;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  min-width: 85px;
+}
+
+.status-btn.member {
+  background: #4caf50;
+  color: white;
+  cursor: default;
+}
+
+.status-btn.requested {
+  background: #888;
+  color: #ddd;
+  cursor: not-allowed;
+}
+
+.status-btn:not(.member):not(.requested) {
+  background: #4caf50;
+  color: white;
+}
+
+.status-btn:disabled {
+  opacity: 0.8;
+}
+
+/* Search Result Item */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9f7;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.search-result-item span {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+
+/* ====================== CREATE GROUP FORM ====================== */
+/* Wrapper for arrow + form */
+.create-group-wrapper{
+  flex: 1;
+  height: 100%;
+  position: relative;
+  display: flex;
+}
+.create-group-container{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;   /* horizontal center */
+  align-items: center;       /* vertical center */
+  padding: 20px;
+}
+/* Back arrow styling */
+.back-arrow{
+  position: absolute;
+  top: 20px;
+  left: 25px;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 5;
+  transition: 0.2s;
+}
+
+.back-arrow:hover {
+  color: #149702;
+  transform: translateX(-10px);
+}
+
+.create-group-form{
+  width: 420px;
+  max-width: 95%;
+  max-height: 92%;          /* responsive height based on chat-area */
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.create-group-header {
+  padding: 20px 25px 10px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.group-type-badge {
+  background: #4caf50;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Scrollable Content */
+.create-group-content {
+  flex: 1;
+  padding: 20px 25px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Avatar */
+.group-avatar-upload {
+  text-align: center;
+}
+
+.avatar-upload-label {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.group-avatar-preview {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid #4caf50;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.65);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.avatar-upload-label:hover .upload-overlay {
+  opacity: 1;
+}
+
+/* Inputs */
+.group-input,
+.group-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15.5px;
+}
+
+.group-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Planning Fields */
+.planning-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Add Members */
+.add-members-section h4 {
+  margin: 8px 0 12px 0;
+  color: #2c3e2f;
+}
+
+.user-list-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  background: #f8f9f7;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+/* Create Button */
+.create-group-btn {
+  background: #4caf50;
+  color: white;
+ 
+  border: none;
+  padding: 16px;
+  font-size: 16.5px;
+  font-weight: 600;
+  border-radius: 0 0 100px 100px;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.create-group-btn:hover {
+  background: #307933;
+}
+
+/* Smaller Search Bar */
+.user-search-box.small-search {
+  height: 42px;           /* Decreased height */
+  padding: 0 14px;
+  border-radius: 25px;
+}
+
+.user-search-box.small-search input {
+  font-size: 14.5px;
+  padding: 0 8px;
+}
+
+/* Make sure the search icon also looks balanced */
+.user-search-box.small-search .search-icon {
+  font-size: 16px;
+}
+
+/* Optional: Reduce padding in user list items for compact look */
+.user-item-small {
+  padding: 9px 12px;
+  font-size: 14.5px;
+}
+
+.red-dot {
+  width: 5px;
+  height: 5px;
+  background: #ff3b30;
+  border-radius: 50%;
+  display: inline-block;
+  
+}
+
+@keyframes pulse {
+  0% { transform: scale(5); }
+  50% { transform: scale(10); }
+  100% { transform: scale(20); }
 }
