@@ -14,8 +14,11 @@ dotenv.config();
 // ================= INITIALIZE APP =================
 const app = express();
 
+
 // ================= DATABASE =================
-connectDB();
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+}
 
 // ================= MIDDLEWARE =================
 app.use(cors());
@@ -57,7 +60,6 @@ const io = new Server(server, {
 // Make io accessible in routes
 app.set("io", io);
 
-// ================= SOCKET.IO LOGIC =================
 // ================= SOCKET.IO LOGIC =================
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -132,14 +134,27 @@ const checkExpiredGroups = async () => {
 };
 
 // Run immediately and then every 5 minutes
-checkExpiredGroups();
-setInterval(checkExpiredGroups, 5 * 60 * 1000);
+// ================= EXPIRED PLANNING GROUPS CLEANUP =================
+if (process.env.NODE_ENV !== "test") {
+  checkExpiredGroups();
+  setInterval(checkExpiredGroups, 5 * 60 * 1000);
+}
 
 // ================= START SERVER =================
-const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+if (process.env.NODE_ENV !== "test") {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+  });
+}
+
+
+app.use((err, req, res, next) => {
+  console.error("UNHANDLED ERROR:", err.message, err.stack);
+  if (!res.headersSent) {
+    res.status(500).json({ message: "Server error", detail: err.message });
+  }
 });
 
 module.exports = app;

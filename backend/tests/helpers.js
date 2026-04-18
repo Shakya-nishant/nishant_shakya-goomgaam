@@ -19,7 +19,7 @@ const createUser = async (overrides = {}) => {
 const getToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET,   // ← uses your real .env secret, same as the app
+    process.env.JWT_SECRET || "test-secret-key",
     { expiresIn: "1d" }
   );
 
