@@ -21,7 +21,6 @@ const EditProfile = () => {
   const [previewPic, setPreviewPic] = useState(null);
   const navigate = useNavigate();
 
-  /* ================= LOAD PROFILE ================= */
   useEffect(() => {
     const loadProfile = async () => {
       const token = localStorage.getItem("token");
@@ -49,12 +48,10 @@ const EditProfile = () => {
     loadProfile();
   }, []);
 
-  /* ================= INPUT CHANGE ================= */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  /* ================= PROFILE PIC ================= */
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -63,7 +60,6 @@ const EditProfile = () => {
     }
   };
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -113,7 +109,6 @@ const EditProfile = () => {
         <h2>Edit Profile</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* PROFILE PICTURE */}
           <div className="profile-pic-wrapper">
             <img
               src={previewPic || "https://via.placeholder.com/120"}
@@ -126,7 +121,6 @@ const EditProfile = () => {
             </label>
           </div>
 
-          {/* USER INFO */}
           <input
             name="name"
             value={formData.name}
@@ -161,7 +155,6 @@ const EditProfile = () => {
             required
           />
 
-          {/* PASSWORD */}
           <h4>Change Password</h4>
 
           <input

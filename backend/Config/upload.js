@@ -1,10 +1,9 @@
-// Config/upload.js
 const multer = require("multer");
 const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");   // make sure this folder exists
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
@@ -14,11 +13,13 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 15 * 1024 * 1024,     // ← Change to 15MB (or higher)
+    fileSize: 15 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = filetypes.test(
+      path.extname(file.originalname).toLowerCase(),
+    );
     const mimetype = filetypes.test(file.mimetype);
 
     if (mimetype && extname) {

@@ -6,14 +6,11 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 
-
-
 // ================= LOAD ENVIRONMENT FIRST =================
 dotenv.config();
 
 // ================= INITIALIZE APP =================
 const app = express();
-
 
 // ================= DATABASE =================
 if (process.env.NODE_ENV !== "test") {
@@ -34,7 +31,7 @@ const sosRoutes = require("./routes/sos");
 const chatRoutes = require("./routes/chat");
 const rewardRoutes = require("./routes/reward");
 const reportRoutes = require("./routes/report");
-const adminRoutes = require("./routes/admin");     // ✅ Your new admin route
+const adminRoutes = require("./routes/admin");
 const notificationRoutes = require("./routes/notification");
 
 app.use("/api/auth", authRoutes);
@@ -43,9 +40,8 @@ app.use("/api/sos", sosRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/reward", rewardRoutes);
 app.use("/api/reports", reportRoutes);
-app.use("/api/admin", adminRoutes);               // ✅ Correct place
+app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
-
 
 // ================= CREATE HTTP SERVER + SOCKET.IO =================
 const server = http.createServer(app);
@@ -85,7 +81,10 @@ io.on("connection", (socket) => {
         readBy: [data.senderId],
       });
       await newMessage.save();
-      const populatedMessage = await newMessage.populate("sender", "name profilePic");
+      const populatedMessage = await newMessage.populate(
+        "sender",
+        "name profilePic",
+      );
       io.to(data.chatId).emit("receiveMessage", populatedMessage);
 
       // ── Emit newMessage to all chat participants' personal rooms ──
@@ -94,7 +93,10 @@ io.on("connection", (socket) => {
       if (chat) {
         chat.participants.forEach((participantId) => {
           if (participantId.toString() !== data.senderId.toString()) {
-            io.to(participantId.toString()).emit("newMessage", populatedMessage);
+            io.to(participantId.toString()).emit(
+              "newMessage",
+              populatedMessage,
+            );
           }
         });
       }
@@ -122,7 +124,7 @@ const checkExpiredGroups = async () => {
         expiresAt: { $lt: now },
         isActive: { $ne: false },
       },
-      { isActive: false }
+      { isActive: false },
     );
 
     if (result.modifiedCount > 0) {
@@ -133,8 +135,6 @@ const checkExpiredGroups = async () => {
   }
 };
 
-// Run immediately and then every 5 minutes
-// ================= EXPIRED PLANNING GROUPS CLEANUP =================
 if (process.env.NODE_ENV !== "test") {
   checkExpiredGroups();
   setInterval(checkExpiredGroups, 5 * 60 * 1000);
@@ -148,7 +148,6 @@ if (process.env.NODE_ENV !== "test") {
     console.log(`🚀 Server is running on port ${PORT}`);
   });
 }
-
 
 app.use((err, req, res, next) => {
   console.error("UNHANDLED ERROR:", err.message, err.stack);

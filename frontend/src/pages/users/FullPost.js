@@ -25,7 +25,6 @@ import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "../css/FullPost.css";
 
-/* ── Routing sub-component ── */
 const Routing = ({ points }) => {
   const map = useMap();
   const routingRef = useRef(null);
@@ -69,7 +68,6 @@ const Routing = ({ points }) => {
   return null;
 };
 
-/* ── Main Component ── */
 const FullPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -165,13 +163,11 @@ const FullPost = () => {
       <Navbar />
 
       <div className="fp-page">
-        {/* ── Back Button ── */}
         <button className="fp-back-btn" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Back
         </button>
 
         <div className="fp-card">
-          {/* ── Author Row ── */}
           <div className="fp-author">
             <img
               src={
@@ -195,7 +191,6 @@ const FullPost = () => {
             </div>
           </div>
 
-          {/* ── Photo Gallery ── */}
           <div className="fp-gallery">
             {trek.photos?.length > 0 ? (
               <>
@@ -312,7 +307,6 @@ const FullPost = () => {
               )}
             </div>
 
-            {/* ── Action Bar ── */}
             <div className="fp-action-bar">
               <div className="fp-actions-left">
                 <button
@@ -349,7 +343,6 @@ const FullPost = () => {
         </div>
       </div>
 
-      {/* ── Map Modal ── */}
       {showMap && trek.routePoints?.length > 0 && (
         <div className="fp-modal-overlay" onClick={() => setShowMap(false)}>
           <div className="fp-map-modal" onClick={(e) => e.stopPropagation()}>
@@ -391,7 +384,6 @@ const FullPost = () => {
         </div>
       )}
 
-      {/* ── Comments Modal ── */}
       {showComments && (
         <div
           className="fp-modal-overlay"

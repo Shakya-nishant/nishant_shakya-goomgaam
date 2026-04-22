@@ -16,7 +16,7 @@ describe("GET /api/notifications", () => {
       message: "someone liked your post",
     });
     const res = await request(app)
-      .get("/api/notifications")               // ← fixed (was /api/notification)
+      .get("/api/notifications")               
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
@@ -32,7 +32,7 @@ describe("PUT /api/notifications/mark-read", () => {
       isRead: false,
     });
     const res = await request(app)
-      .put("/api/notifications/mark-read")     // ← fixed
+      .put("/api/notifications/mark-read")    
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(200);
   });
@@ -45,7 +45,7 @@ describe("GET /api/notifications/unread-count", () => {
       { recipient: user._id, type: "comment", message: "b", isRead: false },
     ]);
     const res = await request(app)
-      .get("/api/notifications/unread-count")  // ← fixed
+      .get("/api/notifications/unread-count") 
       .set("Authorization", `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.count).toBe(2);

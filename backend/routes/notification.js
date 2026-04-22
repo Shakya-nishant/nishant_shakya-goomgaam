@@ -3,7 +3,6 @@ const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
 const Notification = require("../models/Notification");
 
-// GET all notifications for current user
 router.get("/", protect, async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user._id })
@@ -17,7 +16,6 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-// GET unread count
 router.get("/unread-count", protect, async (req, res) => {
   try {
     const count = await Notification.countDocuments({
@@ -30,12 +28,11 @@ router.get("/unread-count", protect, async (req, res) => {
   }
 });
 
-// MARK all as read
 router.put("/mark-read", protect, async (req, res) => {
   try {
     await Notification.updateMany(
       { recipient: req.user._id, isRead: false },
-      { isRead: true }
+      { isRead: true },
     );
     res.json({ message: "All marked as read" });
   } catch (err) {
@@ -43,7 +40,6 @@ router.put("/mark-read", protect, async (req, res) => {
   }
 });
 
-// MARK single as read
 router.put("/:id/read", protect, async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
@@ -53,7 +49,6 @@ router.put("/:id/read", protect, async (req, res) => {
   }
 });
 
-// DELETE single notification
 router.delete("/:id", protect, async (req, res) => {
   try {
     await Notification.findByIdAndDelete(req.params.id);

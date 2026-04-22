@@ -1,16 +1,15 @@
 const mongoose = require("mongoose");
 
-// models/Report.js — change trekId to ObjectId for consistency
 const reportSchema = new mongoose.Schema({
-  trekId: { 
-    type: mongoose.Schema.Types.ObjectId,  // ← was String, caused updateMany mismatch
+  trekId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Trek",
-    required: true 
+    required: true,
   },
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId,  // ← same fix
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true 
+    required: true,
   },
   type: {
     type: String,
@@ -19,7 +18,7 @@ const reportSchema = new mongoose.Schema({
       "Inaccurate Location",
       "AI / fake image",
       "Fake Information",
-      "Safety Hazard"
+      "Safety Hazard",
     ],
     required: true,
   },

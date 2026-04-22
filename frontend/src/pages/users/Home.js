@@ -51,7 +51,7 @@ const Home = () => {
           await axios.post(
             "http://localhost:5000/api/sos",
             { location: locationUrl },
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${token}` } },
           );
           setSosStatus("success");
           setTimeout(() => setSosStatus(null), 4000);
@@ -67,7 +67,7 @@ const Home = () => {
         console.error("Location error:", err);
         alert("Failed to get your location. Please enable location access.");
         setSosLoading(false);
-      }
+      },
     );
   };
 
@@ -104,7 +104,9 @@ const Home = () => {
                 src={profilePic}
                 alt={trek.user?.name}
                 className="home-card-pfp"
-                onError={(e) => { e.target.src = "https://via.placeholder.com/36"; }}
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/36";
+                }}
               />
             ) : (
               <div className="home-card-pfp-fallback">
@@ -112,19 +114,28 @@ const Home = () => {
               </div>
             )}
           </div>
-          <span className="home-card-username">{trek.user?.name || "Unknown"}</span>
+          <span className="home-card-username">
+            {trek.user?.name || "Unknown"}
+          </span>
         </div>
         <div className="home-card-image">
           <img
             src={getTrekImage(trek.photos)}
             alt={trek.title}
-            onError={(e) => { e.target.src = "https://via.placeholder.com/400x220?text=No+Image"; }}
+            onError={(e) => {
+              e.target.src =
+                "https://via.placeholder.com/400x220?text=No+Image";
+            }}
           />
         </div>
         <div className="home-card-info">
           <h3 className="home-card-title">{trek.title}</h3>
           <p className="home-card-meta">
-            📍 {trek.province || trek.district || trek.locationTags || "Unknown Location"}
+            📍{" "}
+            {trek.province ||
+              trek.district ||
+              trek.locationTags ||
+              "Unknown Location"}
           </p>
           <p className="home-card-meta">💰 Rs {totalCost.toLocaleString()}</p>
           <p className="home-card-date">
@@ -139,7 +150,6 @@ const Home = () => {
     <div className="home-container">
       <Navbar />
 
-      {/* ── Hero ── */}
       <section className="home-hero">
         <div className="home-hero-content">
           <h1>Discover Your Next Adventure</h1>
@@ -148,23 +158,29 @@ const Home = () => {
             trails, and unforgettable experiences in nature's playground.
           </p>
           <div className="home-hero-buttons">
-            <button className="home-btn-primary" onClick={() => navigate("/explore-trek")}>
+            <button
+              className="home-btn-primary"
+              onClick={() => navigate("/explore-trek")}
+            >
               Explore Treks
             </button>
-            <button className="home-btn-secondary" onClick={() => navigate("/share-trek")}>
+            <button
+              className="home-btn-secondary"
+              onClick={() => navigate("/share-trek")}
+            >
               Share Your Trek
             </button>
           </div>
         </div>
       </section>
 
-      {/* ── SOS Strip ── */}
       <div className="home-sos-strip">
         <div className="home-sos-strip-inner">
           <div className="home-sos-strip-text">
             <span className="home-sos-strip-title">Emergency SOS</span>
             <span className="home-sos-strip-desc">
-              In distress? Send your live location to your emergency contact instantly.
+              In distress? Send your live location to your emergency contact
+              instantly.
             </span>
           </div>
           <div className="sos-wrapper">
@@ -188,14 +204,13 @@ const Home = () => {
               {sosStatus === "success"
                 ? "Alert Sent!"
                 : sosStatus === "error"
-                ? "Failed"
-                : "Emergency"}
+                  ? "Failed"
+                  : "Emergency"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── Popular Treks ── */}
       <section className="home-section">
         <h2 className="home-section-title">Popular Treks</h2>
         <p className="home-section-subtitle">
@@ -210,7 +225,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Recent Stories ── */}
       <section className="home-section home-section-alt">
         <h2 className="home-section-title">Recent Trek Stories</h2>
         <p className="home-section-subtitle">

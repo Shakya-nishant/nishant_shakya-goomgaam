@@ -1,35 +1,28 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import "../css/ProfileTrek.css"; // ← You can keep or merge later
+import "../css/ProfileTrek.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
-
-// Import icons used in card
 import { FaHeart, FaRegComment, FaBookmark, FaEllipsisV } from "react-icons/fa";
 
-// Keep your Routing component (it's fine)
 const Routing = ({ points }) => {
   const map = useMap();
   const routingRef = React.useRef(null);
-
   useEffect(() => {
     if (!map || !points || points.length < 2) return;
-
     const waypoints = points.map((p) => L.latLng(p.lat, p.lng));
-
     if (routingRef.current) {
       try {
         map.removeControl(routingRef.current);
       } catch {}
       routingRef.current = null;
     }
-
     const instance = L.Routing.control({
       waypoints,
       lineOptions: { styles: [{ color: "blue", weight: 4 }] },
@@ -40,10 +33,8 @@ const Routing = ({ points }) => {
       fitSelectedRoutes: true,
       show: false,
     });
-
     instance.addTo(map);
     routingRef.current = instance;
-
     return () => {
       if (!routingRef.current) return;
       try {
@@ -53,18 +44,17 @@ const Routing = ({ points }) => {
       routingRef.current = null;
     };
   }, [points, map]);
-
   return null;
 };
 
 const ProfileTrek = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [treks, setTreks] = useState([]);
   const [weatherData, setWeatherData] = useState({});
-  const [forecastData, setForecastData] = useState({}); // for forecast modal
+  const [forecastData, setForecastData] = useState({});
   const [activeForecastTrekId, setActiveForecastTrekId] = useState(null);
-
   const [currentUserId, setCurrentUserId] = useState(null);
   const isOwnProfile = currentUserId === userId;
   const [viewedUserReward, setViewedUserReward] = useState({
@@ -72,7 +62,6 @@ const ProfileTrek = () => {
     leaderboardRank: "-",
   });
 
-  // Modals
   const [showLikes, setShowLikes] = useState(false);
   const [likesData, setLikesData] = useState([]);
   const [showComments, setShowComments] = useState(false);
@@ -85,7 +74,6 @@ const ProfileTrek = () => {
   const [chatRequested, setChatRequested] = useState(false);
   const [checkingRequest, setCheckingRequest] = useState(true);
 
-  // Fetch data
   useEffect(() => {
     fetchUserTreks();
     fetchCurrentUser();
@@ -93,27 +81,17 @@ const ProfileTrek = () => {
   }, [userId]);
 
   useEffect(() => {
-    if (userId) {
-      fetchViewedUserReward();
-    }
+    if (userId) fetchViewedUserReward();
   }, [userId]);
-
-  useEffect(() => {
-    console.log("USER DATA:", user);
-  }, [user]);
 
   const fetchUser = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.get(
         `http://localhost:5000/api/reward/user/${userId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      setUser(res.data.user); // ✅ IMPORTANT
+      setUser(res.data.user);
       setViewedUserReward({
         rewardPoints: res.data.rewardPoints,
         leaderboardRank: res.data.leaderboardRank,
@@ -122,6 +100,7 @@ const ProfileTrek = () => {
       console.error(err);
     }
   };
+
   const fetchUserTreks = async () => {
     try {
       const res = await axios.get(
@@ -134,46 +113,23 @@ const ProfileTrek = () => {
     }
   };
 
-  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-  }
-
   const checkExistingRequest = async () => {
     if (!currentUserId || !userId) {
       setChatRequested(false);
       setCheckingRequest(false);
       return;
     }
-
     setCheckingRequest(true);
-
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
         `http://localhost:5000/api/chat/request/status/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
-      const exists = res.data.requestExists === true;
-      setChatRequested(exists);
-
-      console.log(`[DEBUG] Chat request exists for ${userId}: ${exists}`);
+      setChatRequested(res.data.requestExists === true);
     } catch (err) {
       console.error("Chat request status check failed:", err);
-      setChatRequested(false); // ← CRITICAL FIX: always default to false on error
+      setChatRequested(false);
     } finally {
       setCheckingRequest(false);
     }
@@ -194,14 +150,10 @@ const ProfileTrek = () => {
   const fetchViewedUserReward = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.get(
-        `http://localhost:5000/api/reward/user/${userId}`, // <-- use profile userId
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        `http://localhost:5000/api/reward/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-
       setViewedUserReward(res.data);
     } catch (err) {
       console.error("Failed to fetch reward:", err);
@@ -209,7 +161,6 @@ const ProfileTrek = () => {
     }
   };
 
-  // Weather (current)
   useEffect(() => {
     const loadWeather = async () => {
       const result = {};
@@ -236,7 +187,6 @@ const ProfileTrek = () => {
     if (treks.length) loadWeather();
   }, [treks]);
 
-  // Forecast fetch (same as ExploreTrek)
   const fetchForecast = async (lat, lon, trekId) => {
     if (forecastData[trekId]) return;
     try {
@@ -260,7 +210,6 @@ const ProfileTrek = () => {
         }
         dailyMap[date].temps.push(item.main.temp);
       });
-
       const daily = Object.keys(dailyMap)
         .slice(0, 7)
         .map((date) => {
@@ -271,7 +220,6 @@ const ProfileTrek = () => {
             weather: [dailyMap[date].weather],
           };
         });
-
       setForecastData((prev) => ({ ...prev, [trekId]: daily }));
     } catch (err) {
       console.error("Forecast error:", err);
@@ -281,9 +229,8 @@ const ProfileTrek = () => {
   const openForecast = (trek) => {
     const endPoint = trek.routePoints?.[trek.routePoints.length - 1];
     if (!endPoint?.lat || !endPoint?.lng) return;
-    if (!forecastData[trek._id]) {
+    if (!forecastData[trek._id])
       fetchForecast(endPoint.lat, endPoint.lng, trek._id);
-    }
     setActiveForecastTrekId(trek._id);
   };
 
@@ -334,9 +281,7 @@ const ProfileTrek = () => {
     await axios.put(
       `http://localhost:5000/api/treks/like/${trekId}`,
       {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     refreshTreks();
   };
@@ -346,9 +291,7 @@ const ProfileTrek = () => {
     await axios.put(
       `http://localhost:5000/api/treks/save/${trekId}`,
       {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     refreshTreks();
   };
@@ -413,7 +356,6 @@ const ProfileTrek = () => {
 
   const handleSendChatRequest = async () => {
     if (!userId || isOwnProfile || chatRequested) return;
-
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -421,12 +363,10 @@ const ProfileTrek = () => {
         { to: userId },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
       setChatRequested(true);
       alert("Chat request sent successfully!");
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to send chat request";
-
       if (
         msg.toLowerCase().includes("already exists") ||
         msg.toLowerCase().includes("request already")
@@ -436,23 +376,18 @@ const ProfileTrek = () => {
       } else {
         alert(msg);
       }
-      console.error(err);
     }
   };
 
   useEffect(() => {
     checkExistingRequest();
   }, [userId, currentUserId]);
-
   useEffect(() => {
     setChatRequested(false);
     setCheckingRequest(true);
   }, [userId]);
-
   useEffect(() => {
-    const handleFocus = () => {
-      checkExistingRequest();
-    };
+    const handleFocus = () => checkExistingRequest();
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [currentUserId, userId]);
@@ -464,10 +399,7 @@ const ProfileTrek = () => {
     <>
       <Navbar />
       <div className="profile-page">
-        {/* Profile Header */}
-        {/* NEW PROFILE CARD */}
         <div className="profile-card">
-          {/* LEFT COLUMN */}
           <div className="profile-col card left-col">
             <div className="profile-left">
               <div className="avatar">
@@ -482,7 +414,6 @@ const ProfileTrek = () => {
                   </div>
                 )}
               </div>
-
               <div className="profile-info">
                 <h2>{user?.name}</h2>
                 <p className="joined-date">
@@ -495,7 +426,6 @@ const ProfileTrek = () => {
                       })
                     : "N/A"}
                 </p>
-
                 {!isOwnProfile && (
                   <button
                     className="chat-request-btn"
@@ -512,27 +442,21 @@ const ProfileTrek = () => {
               </div>
             </div>
           </div>
-
-          {/* MIDDLE COLUMN */}
           <div className="profile-col card middle-col">
             <h3>Reward Points</h3>
             <div className="big-stat">
               {viewedUserReward?.rewardPoints || 0}
             </div>
-
             <p className="rank-text">
               Rank: <strong>#{viewedUserReward?.leaderboardRank || "-"}</strong>
             </p>
           </div>
-
-          {/* RIGHT COLUMN */}
           <div className="profile-col card right-col">
             <h3>Total Posts</h3>
             <div className="big-stat">{treks.length}</div>
           </div>
         </div>
 
-        {/* Trek Section */}
         <div className="trek-section">
           <h3>Trek Shared</h3>
           <div className="trek-grid">
@@ -543,14 +467,19 @@ const ProfileTrek = () => {
                 trek.user?.name?.charAt(0)?.toUpperCase() || "U";
 
               return (
-                <div className="trek-card" key={trek._id}>
-                  {/* Card Header - Same as ExploreTrek */}
+                <div
+                  className="trek-card"
+                  key={trek._id}
+                  onClick={() => navigate(`/fullpost/${trek._id}`)}
+                  style={{ cursor: "pointer" }}
+                >
                   <div className="card-header">
                     <div
                       className="user-info"
-                      onClick={() =>
-                        window.open(`/profile/${trek.user._id}`, "_self")
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${trek.user._id}`);
+                      }}
                       style={{
                         gap: "12px",
                         alignItems: "center",
@@ -593,7 +522,10 @@ const ProfileTrek = () => {
                       {weather && (
                         <div
                           className="weather-trigger"
-                          onClick={() => openForecast(trek)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openForecast(trek);
+                          }}
                           title="Click to see forecast"
                         >
                           <img
@@ -610,54 +542,40 @@ const ProfileTrek = () => {
                       >
                         <FaEllipsisV
                           className="menu-icon"
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setActiveReportTrekId((prev) =>
                               prev === trek._id ? null : trek._id,
-                            )
-                          }
+                            );
+                          }}
                           style={{ cursor: "pointer" }}
                         />
                         {activeReportTrekId === trek._id && (
-                          <div className="report-card">
+                          <div
+                            className="report-card"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <p style={{ textAlign: "center" }}>
                               <b>Report Trek</b>
                             </p>
                             <ul>
-                              <li
-                                onClick={() =>
-                                  handleReport(trek._id, "Fake Costing")
-                                }
-                              >
-                                Fake Costing
-                              </li>
-                              <li
-                                onClick={() =>
-                                  handleReport(trek._id, "Inaccurate Location")
-                                }
-                              >
-                                Inaccurate Location
-                              </li>
-                              <li
-                                onClick={() =>
-                                  handleReport(trek._id, "AI / fake image")
-                                }
-                              >
-                                AI / fake image
-                              </li>
-                              <li
-                                onClick={() =>
-                                  handleReport(trek._id, "Fake Information")
-                                }
-                              >
-                                Fake Information
-                              </li>
-                              <li
-                                onClick={() =>
-                                  handleReport(trek._id, "Safety Hazard")
-                                }
-                              >
-                                Safety Hazard
-                              </li>
+                              {[
+                                "Fake Costing",
+                                "Inaccurate Location",
+                                "AI / fake image",
+                                "Fake Information",
+                                "Safety Hazard",
+                              ].map((type) => (
+                                <li
+                                  key={type}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleReport(trek._id, type);
+                                  }}
+                                >
+                                  {type}
+                                </li>
+                              ))}
                             </ul>
                           </div>
                         )}
@@ -665,7 +583,6 @@ const ProfileTrek = () => {
                     </div>
                   </div>
 
-                  {/* Image */}
                   <div className="image-wrapper">
                     {trek.photos?.length > 0 ? (
                       <img
@@ -680,7 +597,6 @@ const ProfileTrek = () => {
                     )}
                   </div>
 
-                  {/* Content */}
                   <div className="card-content">
                     <h3>{trek.title}</h3>
                     <p>{trek.description}</p>
@@ -701,10 +617,10 @@ const ProfileTrek = () => {
                     </div>
                   </div>
 
-                  {/* Actions - Same as ExploreTrek */}
                   <div
                     className="card-actions"
                     style={{ display: "flex", gap: "18px" }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div
                       onClick={() => handleLike(trek._id)}
@@ -769,7 +685,10 @@ const ProfileTrek = () => {
 
                     <button
                       className="map-btn"
-                      onClick={() => setSelectedMapTrek(trek)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMapTrek(trek);
+                      }}
                       style={{ marginLeft: "auto", fontSize: "13px" }}
                     >
                       View Map
@@ -782,7 +701,6 @@ const ProfileTrek = () => {
         </div>
       </div>
 
-      {/* Forecast Modal - Same as ExploreTrek */}
       {activeForecastTrekId && (
         <div className="forecast-modal-overlay" onClick={closeForecast}>
           <div className="forecast-modal" onClick={(e) => e.stopPropagation()}>
@@ -817,7 +735,6 @@ const ProfileTrek = () => {
         </div>
       )}
 
-      {/* Map Modal */}
       {selectedMapTrek && (
         <div className="map-modal">
           <div className="map-content">
@@ -863,7 +780,6 @@ const ProfileTrek = () => {
         </div>
       )}
 
-      {/* Likes & Comments modals (same as before, just updated variable name) */}
       {showLikes && (
         <div className="popup-overlay" onClick={() => setShowLikes(false)}>
           <div className="popup-card" onClick={(e) => e.stopPropagation()}>

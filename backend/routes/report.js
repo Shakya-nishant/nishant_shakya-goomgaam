@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Trek = require("../models/Trek");
-const Report = require("../models/Report"); 
+const Report = require("../models/Report");
 const { protect } = require("../middleware/authMiddleware");
 
 router.post("/:trekId", protect, async (req, res) => {

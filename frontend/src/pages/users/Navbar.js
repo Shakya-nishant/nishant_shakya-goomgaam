@@ -14,7 +14,6 @@ const Navbar = () => {
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const [hasChatRequest, setHasChatRequest] = useState(false);
 
-  // ── Load profile pic ──
   useEffect(() => {
     const loadProfilePic = () => {
       const pic = localStorage.getItem("profilePic");
@@ -25,7 +24,6 @@ const Navbar = () => {
     return () => window.removeEventListener("storage", loadProfilePic);
   }, []);
 
-  // ── Fetch chat dots ──
   const fetchChatDots = async () => {
     if (!token) return;
     try {
@@ -44,11 +42,9 @@ const Navbar = () => {
     }
   };
 
-  // ── Socket connection + real-time listeners ──
   useEffect(() => {
     if (!token) return;
 
-    // Decode userId from JWT
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const userId = payload.id;
@@ -61,23 +57,25 @@ const Navbar = () => {
     fetchChatDots();
     const interval = setInterval(fetchChatDots, 30000);
 
-    // Real-time events
-    const onNewMessage   = () => setHasUnreadChat(true);
-    const onChatRequest  = () => { setHasChatRequest(true); fetchChatDots(); };
-    const onReqUpdate    = () => fetchChatDots();
-    const onMsgRead      = () => fetchChatDots();
+    const onNewMessage = () => setHasUnreadChat(true);
+    const onChatRequest = () => {
+      setHasChatRequest(true);
+      fetchChatDots();
+    };
+    const onReqUpdate = () => fetchChatDots();
+    const onMsgRead = () => fetchChatDots();
 
-    socket.on("newMessage",     onNewMessage);
+    socket.on("newMessage", onNewMessage);
     socket.on("newChatRequest", onChatRequest);
     socket.on("requestUpdated", onReqUpdate);
-    socket.on("messagesRead",   onMsgRead);
+    socket.on("messagesRead", onMsgRead);
 
     return () => {
       clearInterval(interval);
-      socket.off("newMessage",     onNewMessage);
+      socket.off("newMessage", onNewMessage);
       socket.off("newChatRequest", onChatRequest);
       socket.off("requestUpdated", onReqUpdate);
-      socket.off("messagesRead",   onMsgRead);
+      socket.off("messagesRead", onMsgRead);
     };
   }, [token]);
 
@@ -86,14 +84,12 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      {/* ── Left ── */}
       <div className="nav-left">
         <img src={logo} alt="GoomGaam" className="nav-logo" />
         <span className="brand-name">GoomGaam</span>
         {role === "admin" && <span className="admin-tag">ADMIN MODE</span>}
       </div>
 
-      {/* ── Right ── */}
       <div className="nav-right">
         <Link to="/home">Home</Link>
         <Link to="/explore-trek">Explore Trek</Link>
@@ -101,12 +97,15 @@ const Navbar = () => {
 
         {role === "admin" && (
           <>
-            <Link to="/admin/analytics" className="admin-link">Analytics</Link>
-            <Link to="/users" className="admin-link">Users</Link>
+            <Link to="/admin/analytics" className="admin-link">
+              Analytics
+            </Link>
+            <Link to="/users" className="admin-link">
+              Users
+            </Link>
           </>
         )}
 
-        {/* Chat icon with live red dot */}
         <Link
           to="/chat"
           className="nav-icon"
@@ -121,10 +120,8 @@ const Navbar = () => {
           {showChatDot && <span className="chat-red-dot" />}
         </Link>
 
-        {/* Notification bell */}
         <Notification />
 
-        {/* Profile */}
         <Link to="/profile" className="profile-link" title="Profile">
           <div className="profile-circle">
             {profilePic ? (

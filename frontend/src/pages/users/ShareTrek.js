@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-
 import {
   MapContainer,
   TileLayer,
@@ -18,7 +17,6 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "../css/ShareTrek.css";
 
-// Fix default Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -26,60 +24,41 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-// ---------------- ROUTE CONTROL ----------------
 const RouteControl = ({ points }) => {
   const map = useMap();
   const routingRef = React.useRef(null);
-
   React.useEffect(() => {
-    if (!map) return;
-    if (!points || points.length < 2) return;
-
-    // 🔴 remove old routing safely
+    if (!map || !points || points.length < 2) return;
     if (routingRef.current) {
       try {
         map.removeControl(routingRef.current);
       } catch (err) {}
       routingRef.current = null;
     }
-
-    // 🟢 create routing
     const instance = L.Routing.control({
-      waypoints: points.map(p => L.latLng(p[0], p[1])),
-
-      lineOptions: {
-        styles: [{ color: "blue", weight: 4 }]
-      },
-
-      createMarker: () => null,      // ⭐ VERY IMPORTANT
+      waypoints: points.map((p) => L.latLng(p[0], p[1])),
+      lineOptions: { styles: [{ color: "blue", weight: 4 }] },
+      createMarker: () => null,
       addWaypoints: false,
       draggableWaypoints: false,
       routeWhileDragging: false,
       fitSelectedRoutes: true,
-      show: false                    // ⭐ prevent panel DOM issues
+      show: false,
     });
-
     instance.addTo(map);
     routingRef.current = instance;
-
-    // 🟢 SAFE CLEANUP (fixes your crash)
     return () => {
       if (!routingRef.current) return;
-
       try {
-        routingRef.current.getPlan().setWaypoints([]); // clear lines safely
+        routingRef.current.getPlan().setWaypoints([]);
         map.removeControl(routingRef.current);
       } catch (err) {}
-
       routingRef.current = null;
     };
-
   }, [points, map]);
-
   return null;
 };
 
-// ---------------- LOCATION MARKER ----------------
 const LocationMarker = ({ addPoint }) => {
   useMapEvents({
     click(e) {
@@ -89,7 +68,130 @@ const LocationMarker = ({ addPoint }) => {
   return null;
 };
 
-// ---------------- MAIN COMPONENT ----------------
+const MapRefGrabber = ({ mapRef }) => {
+  const map = useMap();
+  useEffect(() => {
+    mapRef.current = map;
+  }, [map]);
+  return null;
+};
+
+const RenderMap = React.memo(({ points, addPoint, mapRef }) => (
+  <MapContainer
+    center={[27.7172, 85.324]}
+    zoom={8}
+    style={{ width: "100%", height: "100%" }}
+  >
+    <TileLayer
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      attribution="&copy; OpenStreetMap contributors"
+    />
+    <MapRefGrabber mapRef={mapRef} />
+    {points.map((p, idx) => (
+      <Marker key={idx} position={p}>
+        <Popup>
+          {idx === 0
+            ? "Start Point"
+            : idx === points.length - 1
+              ? "End Point"
+              : `Point ${idx + 1}`}
+        </Popup>
+      </Marker>
+    ))}
+    {points.length >= 2 && <RouteControl points={points} />}
+    <LocationMarker addPoint={addPoint} />
+  </MapContainer>
+));
+
+const ExternalSearchBox = ({ mapRef }) => {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+  const inputRowRef = useRef(null);
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+        { headers: { "Accept-Language": "en" } },
+      );
+      const data = await res.json();
+
+      if (inputRowRef.current) {
+        const rect = inputRowRef.current.getBoundingClientRect();
+        setDropdownStyle({
+          position: "fixed",
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width,
+          zIndex: 99999,
+        });
+      }
+      setResults(data);
+    } catch (err) {
+      console.error("Search failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = (item) => {
+    const lat = parseFloat(item.lat);
+    const lon = parseFloat(item.lon);
+    if (mapRef.current) {
+      mapRef.current.flyTo([lat, lon], 13, { animate: true });
+    }
+    setResults([]);
+    setQuery(item.display_name.split(",")[0]);
+  };
+
+  const dropdown =
+    results.length > 0
+      ? ReactDOM.createPortal(
+          <ul className="map-search-results" style={dropdownStyle}>
+            {results.map((item) => (
+              <li
+                key={item.place_id}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelect(item)}
+              >
+                {item.display_name}
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div className="external-search-box">
+      <div className="map-search-row" ref={inputRowRef}>
+        <input
+          type="text"
+          placeholder="Search location to navigate map..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          onBlur={() => setTimeout(() => setResults([]), 150)}
+          className="map-search-input"
+        />
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="map-search-btn"
+          disabled={loading}
+        >
+          {loading ? "..." : "🔍"}
+        </button>
+      </div>
+      {dropdown}
+    </div>
+  );
+};
+
 const ShareTrek = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -108,27 +210,26 @@ const ShareTrek = () => {
   const [district, setDistrict] = useState("");
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const [existingPhotos, setExistingPhotos] = useState([]); // URLs from backend
+  const [existingPhotos, setExistingPhotos] = useState([]);
+
+  const inlineMapRef = useRef(null);
+  const modalMapRef = useRef(null);
 
   const totalCost =
     Number(travelCost || 0) + Number(foodCost || 0) + Number(hotelCost || 0);
 
-  // ---------------- POINT LIMIT FUNCTION ----------------
   const addPoint = (point) => {
     if (points.length >= 2) {
       alert("You have already selected 2 route points (Start and End)!");
       return;
     }
-    setPoints([...points, point]);
+    setPoints((prev) => [...prev, point]);
   };
+  const resetStart = () => setPoints((pts) => pts.slice(1));
+  const resetEnd = () => setPoints((pts) => pts.slice(0, -1));
 
-  const resetStart = () => setPoints(points.slice(1));
-  const resetEnd = () => setPoints(points.slice(0, -1));
-
-  // ---------------- SUBMIT ----------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -142,42 +243,28 @@ const ShareTrek = () => {
     formData.append("nights", nights ? Number(nights) : 0);
     formData.append("province", province);
     formData.append("district", district);
-
-    if (points.length > 0) {
+    if (points.length > 0)
       formData.append("routePoints", JSON.stringify(points));
-    }
-
     existingPhotos.forEach((url) => formData.append("existingPhotos", url));
     photos.forEach((photo) => formData.append("photos", photo));
-
     try {
       const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
       let res;
-
-      const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Do NOT put Content-Type here
-      },
-    };
-
       if (isEditMode) {
-      res = await axios.put(
-        `http://localhost:5000/api/treks/update/${id}`,
-        formData,
-        config
-      );
-    } else {
-      res = await axios.post(
-        "http://localhost:5000/api/treks/share",
-        formData,
-        config
-      );
-    }
-
+        res = await axios.put(
+          `http://localhost:5000/api/treks/update/${id}`,
+          formData,
+          config,
+        );
+      } else {
+        res = await axios.post(
+          "http://localhost:5000/api/treks/share",
+          formData,
+          config,
+        );
+      }
       alert(res.data.message);
-
-      // ✅ Reset all fields after submit
       if (!isEditMode) {
         setTitle("");
         setDescription("");
@@ -196,39 +283,10 @@ const ShareTrek = () => {
         setExistingPhotos([]);
       }
     } catch (error) {
-    console.error("Full error:", error.response?.data || error);
-    alert(error.response?.data?.message || "Failed to share trek");
-  }
+      console.error("Full error:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to share trek");
+    }
   };
-
-  // ---------------- MAP COMPONENT ----------------
-  const RenderMap = () => (
-    <MapContainer
-      center={[27.7172, 85.324]}
-      zoom={8}
-      style={{ width: "100%", height: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
-      />
-
-      {points.map((p, idx) => (
-        <Marker key={idx} position={p}>
-          <Popup>
-            {idx === 0
-              ? "Start Point"
-              : idx === points.length - 1
-                ? "End Point"
-                : `Point ${idx + 1}`}
-          </Popup>
-        </Marker>
-      ))}
-
-      {points.length >= 2 && <RouteControl points={points} />}
-      <LocationMarker addPoint={addPoint} />
-    </MapContainer>
-  );
 
   const getNightOptions = () => {
     if (!days) return [];
@@ -330,8 +388,8 @@ const ShareTrek = () => {
     ],
   };
 
-  const provinceCode = (prov) => {
-    const mapping = {
+  const provinceCode = (prov) =>
+    ({
       "Koshi Province": "P1",
       "Madhesh Province": "P2",
       "Bagmati Province": "P3",
@@ -339,12 +397,9 @@ const ShareTrek = () => {
       "Lumbini Province": "P5",
       "Karnali Province": "P6",
       "Sudurpashchim Province": "P7",
-    };
-    return mapping[prov] || prov;
-  };
+    })[prov] || prov;
 
   useEffect(() => {
-    // If no id, reset all fields (new trek mode)
     if (!isEditMode) {
       setTitle("");
       setDescription("");
@@ -362,21 +417,17 @@ const ShareTrek = () => {
       setPhotos([]);
       setExistingPhotos([]);
     }
-  }, [id]); // run whenever id changes
+  }, [id]);
 
   useEffect(() => {
     if (!isEditMode) return;
-
     const fetchTrek = async () => {
       try {
         const token = localStorage.getItem("token");
-
         const res = await axios.get(`http://localhost:5000/api/treks/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const trek = res.data;
-
         setTitle(trek.title || "");
         setDescription(trek.description || "");
         setTravelCost(trek.travelCost || "");
@@ -389,20 +440,13 @@ const ShareTrek = () => {
         setNights(trek.nights || "");
         setProvince(trek.province || "");
         setDistrict(trek.district || "");
-
-        // load route points
-        if (trek.routePoints) {
-          setPoints(trek.routePoints);
-        }
-        if (trek.photos && trek.photos.length > 0) {
-          setExistingPhotos(trek.photos); // assume backend returns array of URLs
-        }
+        if (trek.routePoints) setPoints(trek.routePoints);
+        if (trek.photos?.length > 0) setExistingPhotos(trek.photos);
       } catch (err) {
         console.error("Failed to load trek", err);
         alert("Failed to load trek data");
       }
     };
-
     fetchTrek();
   }, [id]);
 
@@ -416,7 +460,6 @@ const ShareTrek = () => {
             Help fellow adventurers discover amazing trails by sharing your
             experience
           </p>
-
           <form onSubmit={handleSubmit}>
             <label>Trek Title</label>
             <input
@@ -475,11 +518,10 @@ const ShareTrek = () => {
                   value={days}
                   onChange={(e) => {
                     setDays(e.target.value);
-                    setNights(""); // reset nights when days change
+                    setNights("");
                   }}
                 />
               </div>
-
               <div>
                 <label>Total Nights</label>
                 <select
@@ -520,14 +562,11 @@ const ShareTrek = () => {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (!file) return;
-
-                  // Check file size (15MB max)
-                if (file.size > 15 * 1024 * 1024) {   // 15MB
-  alert("File size must be less than 15MB");
-  return;
-}
-
-                  setPhotos([file]); // only 1 image allowed
+                  if (file.size > 15 * 1024 * 1024) {
+                    alert("File size must be less than 15MB");
+                    return;
+                  }
+                  setPhotos([file]);
                 }}
               />
               <span>Click to upload or drag and drop</span>
@@ -560,7 +599,6 @@ const ShareTrek = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label>District</label>
                 <select
@@ -596,10 +634,8 @@ const ShareTrek = () => {
         <div className="right-column">
           <div className="card preview-card">
             <h3>Live Preview</h3>
-
             <div className="preview-images">
               {existingPhotos.length + photos.length > 0 ? (
-                // Show first image as large 16:9 preview
                 <div className="img-box single">
                   <img
                     src={
@@ -615,11 +651,8 @@ const ShareTrek = () => {
                     type="button"
                     className="remove-img"
                     onClick={() => {
-                      if (photos.length > 0) {
-                        setPhotos([]);
-                      } else {
-                        setExistingPhotos(existingPhotos.slice(1));
-                      }
+                      if (photos.length > 0) setPhotos([]);
+                      else setExistingPhotos(existingPhotos.slice(1));
                     }}
                   >
                     ✖
@@ -629,17 +662,14 @@ const ShareTrek = () => {
                 <div className="img-placeholder">No Image Selected</div>
               )}
             </div>
-
             <h4>{title || "Your Trek Title"}</h4>
             <p className="preview-desc">
               {description || "Your description will appear here..."}
             </p>
-
             <div className="preview-meta">
               <span>Difficulty: {difficulty || "Not set"}</span>
               <span>Total Cost: ₹ {totalCost}</span>
             </div>
-
             <div className="preview-extra">
               {days && nights && (
                 <p>
@@ -647,7 +677,6 @@ const ShareTrek = () => {
                   {nights > 1 ? "s" : ""}
                 </p>
               )}
-
               {province && district && (
                 <p>
                   {provinceCode(province)} : {district}
@@ -658,9 +687,17 @@ const ShareTrek = () => {
 
           <div className="card route-card">
             <h3>Mark Trek Route</h3>
+
+            <ExternalSearchBox mapRef={inlineMapRef} />
+
             <div className="map-box">
-              <RenderMap />
+              <RenderMap
+                points={points}
+                addPoint={addPoint}
+                mapRef={inlineMapRef}
+              />
             </div>
+
             <div className="route-info">
               {points.length} point(s) selected (maximum 2)
             </div>
@@ -684,39 +721,44 @@ const ShareTrek = () => {
       </div>
 
       {showFullMap && (
-  <div className="map-modal">
-    <div className="map-content">
+        <div className="map-modal">
+          <div className="map-content">
+            <div className="map-header">
+              <h3>Mark Trek Route</h3>
+              <button
+                className="close-btn"
+                onClick={() => setShowFullMap(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="map-divider" />
 
-      {/* HEADER */}
-      <div className="map-header">
-        <h3>Mark Trek Route</h3>
-        <button className="close-btn" onClick={() => setShowFullMap(false)}>
-          ×
-        </button>
-      </div>
+            <div className="modal-search-wrapper">
+              <ExternalSearchBox mapRef={modalMapRef} />
+            </div>
 
-      <div className="map-divider"></div>
-
-      {/* INNER BOX */}
-      <div className="map-inner-box">
-        <div className="map-view">
-          <RenderMap />
+            <div className="map-inner-box">
+              <div className="map-view">
+                <RenderMap
+                  points={points}
+                  addPoint={addPoint}
+                  mapRef={modalMapRef}
+                />
+              </div>
+            </div>
+            <div className="modal-buttons">
+              <button type="button" onClick={resetStart} className="start-btn">
+                Reset Start
+              </button>
+              <button type="button" onClick={resetEnd} className="end-btn">
+                Reset End
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* FOOTER BUTTONS */}
-      <div className="modal-buttons">
-        <button type="button" onClick={resetStart} className="start-btn">
-          Reset Start
-        </button>
-        <button type="button" onClick={resetEnd} className="end-btn">
-          Reset End
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
       <Footer />
     </>
   );

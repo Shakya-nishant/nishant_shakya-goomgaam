@@ -97,7 +97,6 @@ router.get("/me", async (req, res) => {
   }
 });
 
-/* ================= UPDATE PROFILE ================= */
 router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -160,7 +159,6 @@ router.put("/update-profile", upload.single("profilePic"), async (req, res) => {
   }
 });
 
-/* ================= VERIFY EMAIL ================= */
 router.post("/verify-email", async (req, res) => {
   const { email } = req.body;
 
@@ -174,7 +172,6 @@ router.post("/verify-email", async (req, res) => {
   }
 });
 
-/* ================= RESET PASSWORD ================= */
 router.post("/reset-password", async (req, res) => {
   const { email, newPassword } = req.body;
 
@@ -191,8 +188,6 @@ router.post("/reset-password", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-/* ================= ADMIN ================= */
 
 router.get("/all-users", async (req, res) => {
   const users = await User.find().select("-password");

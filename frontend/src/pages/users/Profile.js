@@ -62,14 +62,12 @@ const Profile = () => {
       try {
         const token = localStorage.getItem("token");
 
-        // User info
         const resUser = await axios.get("http://localhost:5000/api/auth/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(resUser.data);
         setUserId(resUser.data._id);
 
-        // Reward stats
         const resStats = await axios.get(
           "http://localhost:5000/api/reward/me",
           {
@@ -78,7 +76,6 @@ const Profile = () => {
         );
         setStats(resStats.data);
 
-        // Leaderboard
         const resLeaderboard = await axios.get(
           "http://localhost:5000/api/reward/leaderboard",
           { headers: { Authorization: `Bearer ${token}` } },
@@ -86,7 +83,6 @@ const Profile = () => {
         setLeaderboard(resLeaderboard.data);
         setFilteredLeaderboard(resLeaderboard.data.slice(0, 10)); // top 10
 
-        // Fetch user's treks
         const resTreks = await axios.get(
           `http://localhost:5000/api/treks/user/${resUser.data._id}`,
           { headers: { Authorization: `Bearer ${token}` } },
@@ -140,7 +136,6 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Refresh all sections that might be open
       if (showMyTreks) {
         const res = await axios.get(
           `http://localhost:5000/api/treks/user/${userId}`,
@@ -183,7 +178,6 @@ const Profile = () => {
     setSelectedTrek({ ...selectedTrek, comments: res.data });
     setNewComment("");
 
-    // refresh treks
     const updated = await axios.get(
       `http://localhost:5000/api/treks/user/${userId}`,
     );
@@ -199,13 +193,11 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Update the comment in the popup
       setSelectedTrek({
         ...selectedTrek,
         comments: selectedTrek.comments.filter((c) => c._id !== commentId),
       });
 
-      // IMPORTANT: Refresh the main trek list to update comment count
       if (showMyTreks) {
         const res = await axios.get(
           `http://localhost:5000/api/treks/user/${userId}`,
@@ -214,7 +206,6 @@ const Profile = () => {
         setMyTreks(res.data);
       }
 
-      // Optional: Also refresh Saved and Liked if they are open
       if (showSavedTreks) {
         fetchSavedTreks();
       }
@@ -236,7 +227,7 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       alert("Report submitted successfully!");
-      setActiveReportTrekId(null); // close menu after report
+      setActiveReportTrekId(null);
     } catch (err) {
       console.error(err);
       alert("Failed to submit report");
@@ -264,14 +255,13 @@ const Profile = () => {
 
   const Routing = ({ points }) => {
     const map = useMap();
-    const routingControlRef = useRef(null); // ← Add this
+    const routingControlRef = useRef(null);
 
     useEffect(() => {
       if (!map || !points || points.length < 2) return;
 
       const waypoints = points.map((p) => L.latLng(p.lat, p.lng));
 
-      // Create the control
       const routingControl = L.Routing.control({
         waypoints,
         lineOptions: { styles: [{ color: "blue", weight: 4 }] },
@@ -279,23 +269,23 @@ const Profile = () => {
         addWaypoints: false,
         draggableWaypoints: false,
         fitSelectedRoutes: true,
-        show: false, // hide the sidebar instructions
+        show: false,
       }).addTo(map);
 
-      routingControlRef.current = routingControl; // save reference
+      routingControlRef.current = routingControl;
 
       return () => {
         if (routingControlRef.current) {
           try {
-            routingControlRef.current.getPlan()?.setWaypoints([]); // clear routes safely
-            routingControlRef.current.remove(); // remove control properly
+            routingControlRef.current.getPlan()?.setWaypoints([]);
+            routingControlRef.current.remove();
           } catch (err) {
             console.warn("Routing cleanup error:", err);
           }
           routingControlRef.current = null;
         }
       };
-    }, [points, map]); // ← map + points as dependencies
+    }, [points, map]);
 
     return null;
   };
@@ -314,7 +304,6 @@ const Profile = () => {
     return null;
   };
 
-  // Fetch saved treks
   const fetchSavedTreks = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -347,11 +336,10 @@ const Profile = () => {
     setShowLikedTreks(false);
 
     if (!showSavedTreks) {
-      fetchSavedTreks(); // ← Important: Fetch when opening
+      fetchSavedTreks();
     }
   };
 
-  // Add this inside your Profile component, along with handleLike
   const handleSave = async (trekId) => {
     try {
       const token = localStorage.getItem("token");
@@ -361,12 +349,10 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      // Refresh saved treks if section is open
       if (showSavedTreks) {
         fetchSavedTreks();
       }
 
-      // Optional: refresh liked treks too in case it affects UI
       if (showLikedTreks) {
         fetchLikedTreks();
       }
@@ -413,14 +399,12 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Remove trek from state
       setMyTreks((prev) => prev.filter((t) => t._id !== trekId));
 
-      // Fetch updated reward stats
       const resStats = await axios.get("http://localhost:5000/api/reward/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setStats(resStats.data); // Update reward points immediately
+      setStats(resStats.data);
     } catch (err) {
       alert("Delete failed");
       console.error(err);
@@ -434,7 +418,6 @@ const Profile = () => {
       <Navbar />
 
       <div className="dashboard">
-        {/* SIDEBAR */}
         <aside className="sidebar">
           <div className="profile-box">
             <img
@@ -472,14 +455,14 @@ const Profile = () => {
 
           <button
             className="btn sos"
-            disabled={sendingSOS} // disables button while sending
+            disabled={sendingSOS}
             onClick={async () => {
               if (!navigator.geolocation) {
                 alert("Geolocation not supported");
                 return;
               }
 
-              setSendingSOS(true); // start sending
+              setSendingSOS(true);
 
               navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
@@ -493,12 +476,12 @@ const Profile = () => {
                     { location: locationLink },
                     { headers: { Authorization: `Bearer ${token}` } },
                   );
-                  alert(res.data.message); // show success message
+                  alert(res.data.message);
                 } catch (err) {
                   console.error(err);
                   alert("Failed to send SOS. Check console for error.");
                 } finally {
-                  setSendingSOS(false); // finished sending
+                  setSendingSOS(false);
                 }
               });
             }}
@@ -518,7 +501,6 @@ const Profile = () => {
           </button>
         </aside>
 
-        {/* CONTENT */}
         <main className="content">
           <div className="profile-details">
             <h3>Profile Information</h3>
@@ -554,7 +536,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Dashboard card */}
           {showDashboardCard && (
             <div className="dashboard-card">
               <div className="dashboard-card-header">
@@ -613,7 +594,6 @@ const Profile = () => {
                     onClick={() => navigate(`/fullpost/${trek._id}`)}
                     style={{ cursor: "pointer" }}
                   >
-                    {/* User Info Row */}
                     <div className="trek-user-info">
                       <img
                         src={
@@ -632,7 +612,7 @@ const Profile = () => {
                         <FaEllipsisV
                           className="menu-icon"
                           onClick={(e) => {
-                            e.stopPropagation(); // prevents parent clicks from triggering
+                            e.stopPropagation();
                             setActiveReportTrekId((prev) =>
                               prev === trek._id ? null : trek._id,
                             );
@@ -692,10 +672,8 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {/* Main Trek Content Box */}
                     <div className="trek-content-box">
                       <div className="trek-content">
-                        {/* Left: Image (16:9) */}
                         <div className="trek-image">
                           {trek.photos?.length > 0 ? (
                             <img
@@ -707,7 +685,6 @@ const Profile = () => {
                           )}
                         </div>
 
-                        {/* Right: Details */}
                         <div className="trek-details">
                           <h4 className="trek-title">{trek.title}</h4>
                           <p className="trek-description">{trek.description}</p>
@@ -732,12 +709,11 @@ const Profile = () => {
                             </span>
                           </div>
 
-                          {/* Actions */}
                           <div className="card-actions">
                             <div className="action-item like-action">
                               <div
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   handleLike(trek._id);
                                 }}
                                 style={{
@@ -760,7 +736,7 @@ const Profile = () => {
                               </div>
                               <span
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   openLikes(trek);
                                 }}
                                 style={{ cursor: "pointer", fontWeight: "500" }}
@@ -771,7 +747,7 @@ const Profile = () => {
 
                             <div
                               onClick={(e) => {
-                                e.stopPropagation(); // ← ADD THIS
+                                e.stopPropagation();
                                 openComments(trek);
                               }}
                               className="action-item"
@@ -779,16 +755,13 @@ const Profile = () => {
                               <FaRegComment style={{ fontSize: "20px" }} />
                               <span>{trek.comments?.length || 0}</span>
                             </div>
-
-                            {/* No Save button for own treks */}
                           </div>
 
-                          {/* Action Buttons - Edit, Delete, View Map */}
                           <div className="my-trek-buttons">
                             <button
                               className="view-map-btn"
                               onClick={(e) => {
-                                e.stopPropagation(); // prevent parent div click
+                                e.stopPropagation();
                                 if (
                                   !trek.routePoints ||
                                   trek.routePoints.length < 2
@@ -808,7 +781,7 @@ const Profile = () => {
                             <button
                               className="edit-btn"
                               onClick={(e) => {
-                                e.stopPropagation(); // prevent parent div click
+                                e.stopPropagation();
                                 navigate(`/share-trek/${trek._id}`);
                               }}
                             >
@@ -818,7 +791,7 @@ const Profile = () => {
                             <button
                               className="delete-btn"
                               onClick={(e) => {
-                                e.stopPropagation(); // prevent parent div click
+                                e.stopPropagation();
                                 handleDeleteTrek(trek._id);
                               }}
                             >
@@ -847,7 +820,6 @@ const Profile = () => {
                     onClick={() => navigate(`/fullpost/${trek._id}`)}
                     style={{ cursor: "pointer" }}
                   >
-                    {/* User Info Row */}
                     <div className="trek-user-info">
                       <img
                         src={
@@ -866,7 +838,7 @@ const Profile = () => {
                         <FaEllipsisV
                           className="menu-icon"
                           onClick={(e) => {
-                            e.stopPropagation(); // prevents parent clicks from triggering
+                            e.stopPropagation();
                             setActiveReportTrekId((prev) =>
                               prev === trek._id ? null : trek._id,
                             );
@@ -926,10 +898,8 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {/* Main Trek Content Box */}
                     <div className="trek-content-box">
                       <div className="trek-content">
-                        {/* Left: Image */}
                         <div className="trek-image">
                           {trek.photos?.length > 0 ? (
                             <img
@@ -941,7 +911,6 @@ const Profile = () => {
                           )}
                         </div>
 
-                        {/* Right: Details */}
                         <div className="trek-details">
                           <h4 className="trek-title">{trek.title}</h4>
                           <p className="trek-description">{trek.description}</p>
@@ -966,13 +935,11 @@ const Profile = () => {
                             </span>
                           </div>
 
-                          {/* Actions - Like Counter is now clickable */}
                           <div className="card-actions">
                             <div className="action-item like-action">
-                              {/* Heart Icon - Still only for liking */}
                               <div
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   handleLike(trek._id);
                                 }}
                                 style={{
@@ -994,10 +961,9 @@ const Profile = () => {
                                 />
                               </div>
 
-                              {/* Like Count - Click to show who liked */}
                               <span
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   openLikes(trek);
                                 }}
                                 style={{
@@ -1012,7 +978,7 @@ const Profile = () => {
 
                             <div
                               onClick={(e) => {
-                                e.stopPropagation(); // ← ADD THIS
+                                e.stopPropagation();
                                 openComments(trek);
                               }}
                               className="action-item"
@@ -1023,7 +989,7 @@ const Profile = () => {
 
                             <div
                               onClick={(e) => {
-                                e.stopPropagation(); // ← ADD THIS
+                                e.stopPropagation();
                                 handleSave(trek._id);
                               }}
                               className="action-item"
@@ -1039,11 +1005,10 @@ const Profile = () => {
                             </div>
                           </div>
 
-                          {/* View Map Button */}
                           <button
                             className="view-map-btn"
                             onClick={(e) => {
-                              e.stopPropagation(); // prevent parent div click
+                              e.stopPropagation();
                               if (
                                 !trek.routePoints ||
                                 trek.routePoints.length < 2
@@ -1071,7 +1036,6 @@ const Profile = () => {
           {showLikedTreks && (
             <div className="saved-treks-container">
               {" "}
-              {/* Same container as Saved Treks */}
               <h2 className="saved-treks-header">Liked Treks</h2>
               {likedTreks.length === 0 ? (
                 <p>No liked treks yet.</p>
@@ -1084,8 +1048,6 @@ const Profile = () => {
                     style={{ cursor: "pointer" }}
                   >
                     {" "}
-                    {/* Same card class */}
-                    {/* User Info Row */}
                     <div className="trek-user-info">
                       <img
                         src={
@@ -1104,7 +1066,7 @@ const Profile = () => {
                         <FaEllipsisV
                           className="menu-icon"
                           onClick={(e) => {
-                            e.stopPropagation(); // prevents parent clicks from triggering
+                            e.stopPropagation();
                             setActiveReportTrekId((prev) =>
                               prev === trek._id ? null : trek._id,
                             );
@@ -1163,10 +1125,8 @@ const Profile = () => {
                         )}
                       </div>
                     </div>
-                    {/* Main Content Box */}
                     <div className="trek-content-box">
                       <div className="trek-content">
-                        {/* Left: Image (16:9) */}
                         <div className="trek-image">
                           {trek.photos?.length > 0 ? (
                             <img
@@ -1178,7 +1138,6 @@ const Profile = () => {
                           )}
                         </div>
 
-                        {/* Right: Details */}
                         <div className="trek-details">
                           <h4 className="trek-title">{trek.title}</h4>
                           <p className="trek-description">{trek.description}</p>
@@ -1203,12 +1162,11 @@ const Profile = () => {
                             </span>
                           </div>
 
-                          {/* Actions */}
                           <div className="card-actions">
                             <div className="action-item like-action">
                               <div
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   handleLike(trek._id);
                                 }}
                                 style={{
@@ -1231,7 +1189,7 @@ const Profile = () => {
                               </div>
                               <span
                                 onClick={(e) => {
-                                  e.stopPropagation(); // ← ADD THIS
+                                  e.stopPropagation();
                                   openLikes(trek);
                                 }}
                                 style={{ cursor: "pointer", fontWeight: "500" }}
@@ -1242,7 +1200,7 @@ const Profile = () => {
 
                             <div
                               onClick={(e) => {
-                                e.stopPropagation(); // ← ADD THIS
+                                e.stopPropagation();
                                 openComments(trek);
                               }}
                               className="action-item"
@@ -1253,7 +1211,7 @@ const Profile = () => {
 
                             <div
                               onClick={(e) => {
-                                e.stopPropagation(); // ← ADD THIS
+                                e.stopPropagation();
                                 handleSave(trek._id);
                               }}
                               className="action-item"
@@ -1269,11 +1227,10 @@ const Profile = () => {
                             </div>
                           </div>
 
-                          {/* View Map Button */}
                           <button
                             className="view-map-btn"
                             onClick={(e) => {
-                              e.stopPropagation(); // prevent parent div click
+                              e.stopPropagation();
                               if (
                                 !trek.routePoints ||
                                 trek.routePoints.length < 2
@@ -1297,8 +1254,6 @@ const Profile = () => {
               )}
             </div>
           )}
-
-          {/* POPUPS */}
 
           {showLikes && (
             <div className="popup-overlay" onClick={() => setShowLikes(false)}>
@@ -1341,9 +1296,6 @@ const Profile = () => {
               <div className="popup-card" onClick={(e) => e.stopPropagation()}>
                 <div className="popup-header">
                   <h3>Comments ({selectedTrek.comments?.length || 0})</h3>
-                  {/* <button className="close-popup-btn" onClick={() => setShowComments(false)}>
-          ✕
-        </button> */}
                 </div>
 
                 <div className="comment-list">
@@ -1417,7 +1369,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Add Comment Input */}
                 <div className="comment-input">
                   <input
                     value={newComment}
@@ -1439,7 +1390,6 @@ const Profile = () => {
           {showMap && selectedMapTrek && (
             <div className="map-modal">
               <div className="map-content">
-                {/* HEADER */}
                 <div className="map-header">
                   <h3>{selectedMapTrek.district || selectedMapTrek.title}</h3>
                   <button
@@ -1451,7 +1401,6 @@ const Profile = () => {
                 </div>
                 <div className="map-divider"></div>
 
-                {/* INNER MAP BOX */}
                 <div className="map-inner-box">
                   <MapContainer
                     center={[
@@ -1465,7 +1414,6 @@ const Profile = () => {
 
                     <Routing points={selectedMapTrek.routePoints} />
 
-                    {/* Start Marker */}
                     <Marker
                       position={[
                         selectedMapTrek.routePoints[0].lat,
@@ -1475,7 +1423,6 @@ const Profile = () => {
                       <Popup>Start</Popup>
                     </Marker>
 
-                    {/* End Marker */}
                     <Marker
                       position={[
                         selectedMapTrek.routePoints[

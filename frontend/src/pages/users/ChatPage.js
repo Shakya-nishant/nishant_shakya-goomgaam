@@ -50,8 +50,8 @@ const ChatPage = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [requestCount, setRequestCount] = useState(0);
   const [planningLocation, setPlanningLocation] = useState("");
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // to force refresh after remove/delete
-  const [chatStatus, setChatStatus] = useState({}); // { userId: { hasChat, hasPendingRequest } }
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [chatStatus, setChatStatus] = useState({});
 
   useEffect(() => {
     if (token) {
@@ -151,7 +151,6 @@ const ChatPage = () => {
       const users = await res.json();
       setSearchResults(users);
 
-      // Check status for each user
       users.forEach(async (user) => {
         const statusRes = await fetch(
           `http://localhost:5000/api/chat/chat-status/${user._id}`,
@@ -213,16 +212,11 @@ const ChatPage = () => {
     }
   };
 
-  // ================== OPEN CHAT ==================
   const openChat = async (chat) => {
     setSelectedChat(chat);
     setActiveTab("Chat");
-    // ⭐ REMOVE CHAT FROM UNREAD LIST INSTANTLY (UI UPDATE)
     setUnreadChats((prev) => prev.filter((c) => c._id !== chat._id));
-
-    // ⭐ DECREASE RED DOT COUNT
     setUnreadCount((prev) => Math.max(prev - (chat.unreadCount || 1), 0));
-
     try {
       const res = await fetch(
         `http://localhost:5000/api/chat/${chat._id}/messages`,
@@ -233,10 +227,8 @@ const ChatPage = () => {
       scrollToBottom("auto");
 
       socket.emit("joinChat", chat._id);
-      // ⭐ tell server messages are read (realtime sync)
       socket.emit("markAsRead", { chatId: chat._id });
 
-      // Mark as read
       await fetch(`http://localhost:5000/api/chat/${chat._id}/read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -247,37 +239,33 @@ const ChatPage = () => {
       console.error("Error opening chat:", err);
     }
   };
-  // ================== SEND MESSAGE ==================
-  // ================== SEND MESSAGE ==================
+
   const sendMessage = () => {
     if (!newMessage.trim() || !selectedChat || !currentUserId) return;
 
     const messageText = newMessage.trim();
 
-    // Create optimistic message (temporary message)
     const optimisticMessage = {
-      _id: `temp-${Date.now()}`, // temporary ID
+      _id: `temp-${Date.now()}`,
       chat: selectedChat._id,
       sender: currentUserId,
       text: messageText,
       createdAt: new Date().toISOString(),
-      isMine: true, // optional flag
+      isMine: true,
     };
 
-    // Add to UI immediately (Optimistic Update)
     setMessages((prev) => [...prev, optimisticMessage]);
     scrollToBottom();
-    // Send to server via socket
+
     socket.emit("sendMessage", {
       chatId: selectedChat._id,
       senderId: currentUserId,
       text: messageText,
     });
 
-    setNewMessage(""); // Clear input
+    setNewMessage("");
   };
 
-  // ================== REQUEST ACTIONS ==================
   const handleRequestAction = async (requestId, status) => {
     try {
       await fetch(`http://localhost:5000/api/chat/request/${requestId}`, {
@@ -291,13 +279,12 @@ const ChatPage = () => {
 
       alert(`Request ${status} successfully`);
       fetchRequests();
-      fetchChats(); // Refresh if accepted
+      fetchChats();
     } catch (err) {
       alert("Action failed");
     }
   };
 
-  // ================== CREATE GROUP ==================
   const createGroup = async () => {
     if (!groupName) return alert("Group name is required");
 
@@ -353,11 +340,7 @@ const ChatPage = () => {
       const updated = await res.json();
 
       setMessages((prev) =>
-        prev.map((m) =>
-          m._id === id
-            ? { ...m, text: updated.text } // ✅ keep old sender
-            : m,
-        ),
+        prev.map((m) => (m._id === id ? { ...m, text: updated.text } : m)),
       );
 
       socket.emit("messageEdited", {
@@ -380,14 +363,12 @@ const ChatPage = () => {
         },
       });
 
-      // local update
       setMessages((prev) =>
         prev.map((m) =>
           m._id === id ? { ...m, text: "This message was unsent" } : m,
         ),
       );
 
-      // emit socket
       socket.emit("messageDeleted", { messageId: id });
     } catch (err) {
       console.error(err);
@@ -395,54 +376,17 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
-    // 📩 NEW MESSAGE RECEIVED
-let readTimeout;
+    let readTimeout;
 
-// socket.on("receiveMessage", (msg) => {
-//   const isCurrentChatOpen =
-//   selectedChat && msg.chat.toString() === selectedChat._id.toString();
-
-//   if (isCurrentChatOpen) {
-
-//     clearTimeout(readTimeout);
-
-//     readTimeout = setTimeout(async () => {
-//       await fetch(`http://localhost:5000/api/chat/${msg.chat}/read`, {
-//         method: "PUT",
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       fetchUnread();
-//     }, 300);
-
-//     setMessages((prev) => {
-//       const exists = prev.some((m) => m._id === msg._id);
-//       if (exists) return prev;
-//       return [...prev, msg];
-//     });
-
-//     scrollToBottom();
-
-//   } else {
-//   fetchUnread();
-//   fetchChats();
-
-//   // 🔥 FORCE UI REFRESH
-//   setRefreshTrigger((prev) => prev + 1);
-// }
-// });
-
-    // 👥 NEW CHAT REQUEST
     socket.on("newChatRequest", () => {
       setRequestCount((prev) => prev + 1);
       fetchRequests();
     });
 
-    // ✅ REQUEST ACCEPTED / REJECTED
     socket.on("requestUpdated", () => {
       fetchRequests();
       fetchChats();
 
-      // decrease red dot if request resolved
       setRequestCount((prev) => Math.max(prev - 1, 0));
     });
 
@@ -451,95 +395,52 @@ let readTimeout;
       fetchChats();
     });
 
-//     socket.on("newMessage", (message) => {
-//   const myId = JSON.parse(localStorage.getItem("userInfo"))._id;
+    socket.on("newMessage", async (msg) => {
+      const isCurrentChatOpen =
+        selectedChat && msg.chat.toString() === selectedChat._id.toString();
 
-//   setChats(prevChats =>
-//     prevChats.map(chat => {
-//       // PRIVATE CHAT
-//       if (!chat.isGroupChat && chat._id === message.chat) {
-//         return {
-//           ...chat,
-//           lastMessage: message,
-//           unreadCount: chat.unreadCount + 1
-//         };
-//       }
+      const myId = currentUserId;
 
-//       // GROUP CHAT
-//       if (chat.isGroupChat && chat._id === message.chat) {
-//         // do not count unread if sender is me
-//         if (message.sender._id === myId) return chat;
+      if (isCurrentChatOpen) {
+        setMessages((prev) => {
+          const exists = prev.some((m) => m._id === msg._id);
+          if (exists) return prev;
+          return [...prev, msg];
+        });
 
-//         return {
-//           ...chat,
-//           lastMessage: message,
-//           unreadCount: chat.unreadCount + 1
-//         };
-//       }
+        scrollToBottom();
 
-//       return chat;
-//     })
-//   );
-// });
+        await fetch(`http://localhost:5000/api/chat/${msg.chat}/read`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-socket.on("newMessage", async (msg) => {
-  const isCurrentChatOpen =
-    selectedChat && msg.chat.toString() === selectedChat._id.toString();
+        socket.emit("markAsRead", { chatId: msg.chat });
 
-  const myId = currentUserId;
-
-  // ===============================
-  // 1️⃣ IF CHAT IS OPEN → append message + mark read
-  // ===============================
-  if (isCurrentChatOpen) {
-    setMessages(prev => {
-      const exists = prev.some(m => m._id === msg._id);
-      if (exists) return prev;
-      return [...prev, msg];
-    });
-
-    scrollToBottom();
-
-    // mark as read instantly
-    await fetch(`http://localhost:5000/api/chat/${msg.chat}/read`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    socket.emit("markAsRead", { chatId: msg.chat });
-
-    // remove from unread tab instantly
-    setUnreadChats(prev => prev.filter(c => c._id !== msg.chat));
-  }
-
-  // ===============================
-  // 2️⃣ UPDATE CHAT SIDEBAR (PRIVATE + GROUP)
-  // ===============================
-  setChats(prevChats =>
-    prevChats.map(chat => {
-      if (chat._id !== msg.chat) return chat;
-
-      // if I sent the message → no unread increment
-      if (msg.sender._id === myId) {
-        return { ...chat, lastMessage: msg };
+        setUnreadChats((prev) => prev.filter((c) => c._id !== msg.chat));
       }
 
-      return {
-        ...chat,
-        lastMessage: msg,
-        unreadCount: (chat.unreadCount || 0) + 1,
-      };
-    })
-  );
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat._id !== msg.chat) return chat;
 
-  // ===============================
-  // 3️⃣ UPDATE UNREAD TAB INSTANTLY
-  // ===============================
-  if (!isCurrentChatOpen && msg.sender._id !== myId) {
-    fetchUnread(); // refresh unread tab instantly
-    setUnreadCount(prev => prev + 1);
-  }
-});
+          if (msg.sender._id === myId) {
+            return { ...chat, lastMessage: msg };
+          }
+
+          return {
+            ...chat,
+            lastMessage: msg,
+            unreadCount: (chat.unreadCount || 0) + 1,
+          };
+        }),
+      );
+
+      if (!isCurrentChatOpen && msg.sender._id !== myId) {
+        fetchUnread();
+        setUnreadCount((prev) => prev + 1);
+      }
+    });
 
     return () => {
       socket.off("receiveMessage");
@@ -560,8 +461,8 @@ socket.on("newMessage", async (msg) => {
   }, [activeTab]);
 
   useEffect(() => {
-  fetchUnread();
-}, [refreshTrigger]);
+    fetchUnread();
+  }, [refreshTrigger]);
 
   const saveGroupEdit = async () => {
     if (!selectedChat) return;
@@ -591,10 +492,10 @@ socket.on("newMessage", async (msg) => {
 
       if (res.ok) {
         alert("Group updated successfully!");
-        setSelectedChat(data.chat); // Update current chat
+        setSelectedChat(data.chat);
         setShowGroupInfo(false);
         setIsEditingGroup(false);
-        fetchChats(); // Refresh sidebar
+        fetchChats();
       } else {
         alert(data.message || "Failed to update group");
       }
@@ -604,7 +505,6 @@ socket.on("newMessage", async (msg) => {
     }
   };
 
-  // ================== SEND GROUP INVITE ==================
   const sendGroupInvite = async (userId) => {
     if (!userId || !selectedChat) return;
 
@@ -639,7 +539,6 @@ socket.on("newMessage", async (msg) => {
     }
   };
 
-  // ================== REMOVE MEMBER ==================
   const removeMember = async (userIdToRemove) => {
     if (
       !selectedChat ||
@@ -661,7 +560,6 @@ socket.on("newMessage", async (msg) => {
       if (res.ok) {
         alert("Member removed successfully");
 
-        // Refresh participants
         const participantsRes = await fetch(
           `http://localhost:5000/api/chat/${selectedChat._id}/participants`,
           { headers: { Authorization: `Bearer ${token}` } },
@@ -670,12 +568,10 @@ socket.on("newMessage", async (msg) => {
 
         setGroupParticipants(updatedParticipants);
 
-        // If current user was removed (shouldn't happen), close group info
         if (userIdToRemove === currentUserId) {
           setShowGroupInfo(false);
           setSelectedChat(null);
         } else {
-          // Refresh main chat list
           fetchChats();
         }
       } else {
@@ -687,7 +583,6 @@ socket.on("newMessage", async (msg) => {
     }
   };
 
-  // ================== DELETE GROUP ==================
   const deleteGroup = async () => {
     if (
       !selectedChat ||
@@ -710,7 +605,7 @@ socket.on("newMessage", async (msg) => {
         alert("Group deleted successfully");
         setShowGroupInfo(false);
         setSelectedChat(null);
-        fetchChats(); // Refresh sidebar
+        fetchChats();
         setActiveTab("Chat");
       } else {
         const data = await res.json();
@@ -727,7 +622,6 @@ socket.on("newMessage", async (msg) => {
       <Navbar />
       <div className="chat-page">
         <div className="chat-container">
-          {/* LEFT SIDEBAR */}
           <div className="sidebar">
             <div className="tabs">
               <button
@@ -788,7 +682,6 @@ socket.on("newMessage", async (msg) => {
               )}
             </div>
 
-            {/* Search Tab */}
             {activeTab === "Search" && (
               <div className="search-wrapper">
                 <div className="search-box">
@@ -824,7 +717,6 @@ socket.on("newMessage", async (msg) => {
                         {hasChat ? (
                           <button
                             onClick={() => {
-                              // Find the chat and open it
                               const chat = chats.find(
                                 (c) =>
                                   !c.isGroup &&
@@ -881,7 +773,6 @@ socket.on("newMessage", async (msg) => {
               </div>
             )}
 
-            {/* Chat / Unread List */}
             <div className="user-list">
               {activeTab === "Chat" &&
                 chats.map((chat) => {
@@ -930,13 +821,11 @@ socket.on("newMessage", async (msg) => {
                   );
                 })}
 
-              {/* Unread Tab */}
               {activeTab === "Unread" &&
                 unreadChats.map((chat) => {
                   const otherUser = !chat.isGroup
                     ? chat.participants?.find((p) => p._id !== currentUserId)
                     : null;
-
                   return (
                     <div
                       key={chat._id}
@@ -976,7 +865,6 @@ socket.on("newMessage", async (msg) => {
                   );
                 })}
 
-              {/* REQUEST TAB */}
               {activeTab === "Request" &&
                 pendingRequests.map((req) => (
                   <div key={req._id} className="user-item">
@@ -1034,7 +922,6 @@ socket.on("newMessage", async (msg) => {
             </div>
           </div>
 
-          {/* RIGHT CHAT AREA */}
           <div className="chat-area">
             {showCreateGroupForm ? (
               <div className="create-group-wrapper">
@@ -1048,7 +935,6 @@ socket.on("newMessage", async (msg) => {
                   />
 
                   <div className="create-group-form">
-                    {/* Header */}
                     <div className="create-group-header">
                       <span className="group-type-badge">
                         {isPlanningGroup
@@ -1057,9 +943,7 @@ socket.on("newMessage", async (msg) => {
                       </span>
                     </div>
 
-                    {/* Scrollable Content */}
                     <div className="create-group-content">
-                      {/* Group Avatar */}
                       <div className="group-avatar-upload">
                         <input
                           type="file"
@@ -1085,7 +969,6 @@ socket.on("newMessage", async (msg) => {
                         </label>
                       </div>
 
-                      {/* Group Name */}
                       <input
                         type="text"
                         placeholder="Group Name"
@@ -1094,7 +977,6 @@ socket.on("newMessage", async (msg) => {
                         className="group-input"
                       />
 
-                      {/* Description */}
                       <textarea
                         placeholder="Group Description (optional)"
                         value={groupDescription}
@@ -1102,7 +984,6 @@ socket.on("newMessage", async (msg) => {
                         className="group-textarea"
                       />
 
-                      {/* Planning Fields */}
                       {isPlanningGroup && (
                         <div className="planning-fields">
                           <input
@@ -1123,11 +1004,9 @@ socket.on("newMessage", async (msg) => {
                         </div>
                       )}
 
-                      {/* Add Members - Smaller Search Bar */}
                       <div className="add-members-section">
                         <h4>Add Members</h4>
 
-                        {/* Smaller Search Bar */}
                         <div className="user-search-box small-search">
                           <FaSearch className="search-icon" />
                           <input
@@ -1170,7 +1049,6 @@ socket.on("newMessage", async (msg) => {
                       </div>
                     </div>
 
-                    {/* Fixed Create Button */}
                     <button onClick={createGroup} className="create-group-btn">
                       Create Group
                     </button>
@@ -1179,8 +1057,6 @@ socket.on("newMessage", async (msg) => {
               </div>
             ) : selectedChat ? (
               <>
-                {/* Chat Header */}
-
                 <div className="chat-header">
                   <div className="header-left">
                     <img
@@ -1219,12 +1095,9 @@ socket.on("newMessage", async (msg) => {
                       }}
                     />
 
-                    {/* Small Dropdown Menu */}
-
                     {showHeaderMenu && (
                       <div ref={headerMenuRef} className="header-menu">
                         {!selectedChat.isGroup ? (
-                          /* PRIVATE CHAT */
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1238,7 +1111,6 @@ socket.on("newMessage", async (msg) => {
                             View Profile
                           </button>
                         ) : (
-                          /* GROUP CHAT */
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();
@@ -1285,7 +1157,7 @@ socket.on("newMessage", async (msg) => {
                     const isMine =
                       msg.sender?._id === currentUserId ||
                       msg.sender === currentUserId ||
-                      msg.isMine === true; // for optimistic messages
+                      msg.isMine === true;
 
                     const isUnsent =
                       msg.isDeleted === true ||
@@ -1310,7 +1182,6 @@ socket.on("newMessage", async (msg) => {
                           />
                         )}
 
-                        {/* 3-Dot Menu - Only show for MY messages that are NOT unsent */}
                         {isMine && !isUnsent && (
                           <div className="msg-menu-wrapper">
                             <FaEllipsisV
@@ -1344,7 +1215,6 @@ socket.on("newMessage", async (msg) => {
                           </div>
                         )}
 
-                        {/* Message Content */}
                         <div className="message-content">
                           {editingMessageId === msg._id ? (
                             <>
@@ -1403,7 +1273,6 @@ socket.on("newMessage", async (msg) => {
             onClick={() => setShowGroupInfo(false)}
           >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
               <div className="modal-header">
                 <div className="group-type-header">
                   <span className="group-type-badge">
@@ -1425,7 +1294,6 @@ socket.on("newMessage", async (msg) => {
 
               <div className="group-info-body">
                 {isEditingGroup ? (
-                  /* EDIT MODE */
                   <div className="edit-group-form">
                     <input
                       type="text"
@@ -1470,7 +1338,6 @@ socket.on("newMessage", async (msg) => {
                     </div>
                   </div>
                 ) : (
-                  /* VIEW MODE */
                   <>
                     <div className="group-avatar-large">
                       <img
@@ -1483,14 +1350,12 @@ socket.on("newMessage", async (msg) => {
                       />
                     </div>
                     <h3 className="group-name">{selectedChat.name}</h3>
-
                     <div className="info-item">
                       <strong>Description:</strong>
                       <p>
                         {selectedChat.description || "No description provided"}
                       </p>
                     </div>
-
                     {selectedChat.type === "planning" && (
                       <>
                         <div className="info-item">
@@ -1511,7 +1376,6 @@ socket.on("newMessage", async (msg) => {
                         </div>
                       </>
                     )}
-
                     <div className="info-item">
                       <strong>Total Members:</strong>
                       <p>
@@ -1519,10 +1383,6 @@ socket.on("newMessage", async (msg) => {
                           groupParticipants.length}
                       </p>
                     </div>
-
-                    {/* Members List */}
-                    {/* Members List */}
-                    {/* Members List */}
                     <div className="members-section">
                       <h4>
                         Members (
@@ -1537,7 +1397,6 @@ socket.on("newMessage", async (msg) => {
                         }
                         )
                       </h4>
-
                       <div className="participants-list">
                         {(Array.isArray(groupParticipants) &&
                         groupParticipants.length > 0
@@ -1547,7 +1406,6 @@ socket.on("newMessage", async (msg) => {
                             : []
                         ).map((user) => (
                           <div key={user._id} className="participant-item">
-                            {/* Left Side: Avatar + Name */}
                             <div className="participant-left">
                               <img
                                 src={
@@ -1560,14 +1418,10 @@ socket.on("newMessage", async (msg) => {
                               />
                               <strong>{user.name}</strong>
                             </div>
-
-                            {/* Right Side: Admin Badge + Remove Button */}
                             <div className="participant-right">
                               {user._id === selectedChat.admin?._id && (
                                 <span className="admin-badge">Admin</span>
                               )}
-
-                              {/* Remove Button - Only visible to Group Admin (not self) */}
                               {selectedChat.admin?._id === currentUserId &&
                                 user._id !== currentUserId && (
                                   <button
@@ -1582,8 +1436,6 @@ socket.on("newMessage", async (msg) => {
                         ))}
                       </div>
                     </div>
-
-                    {/* Add User Section - Only Admin */}
                     {selectedChat.admin?._id === currentUserId && (
                       <div className="add-user-section">
                         <h4>Add User</h4>
@@ -1596,24 +1448,19 @@ socket.on("newMessage", async (msg) => {
                             onChange={handleSearch}
                           />
                         </div>
-
                         {searchResults.length > 0 && (
                           <div className="search-results">
                             {searchResults.map((user) => {
-                              // Safe checks
                               const participantsArray = Array.isArray(
                                 selectedChat.participants,
                               )
                                 ? selectedChat.participants
                                 : [];
-
                               const groupParticipantsArray = Array.isArray(
                                 groupParticipants,
                               )
                                 ? groupParticipants
                                 : [];
-
-                              // Check if user is already a member
                               const isMember =
                                 participantsArray.some(
                                   (p) => p._id === user._id,
@@ -1621,8 +1468,6 @@ socket.on("newMessage", async (msg) => {
                                 groupParticipantsArray.some(
                                   (p) => p._id === user._id,
                                 );
-
-                              // Check if request is already sent
                               const hasPendingRequest = Array.isArray(
                                 pendingRequests,
                               )
@@ -1632,7 +1477,6 @@ socket.on("newMessage", async (msg) => {
                                       req.to === user._id,
                                   )
                                 : false;
-
                               return (
                                 <div
                                   key={user._id}
@@ -1648,7 +1492,6 @@ socket.on("newMessage", async (msg) => {
                                     className="avatar small"
                                   />
                                   <span>{user.name}</span>
-
                                   <button
                                     className={`status-btn 
                   ${isMember ? "member" : ""} 
@@ -1676,7 +1519,6 @@ socket.on("newMessage", async (msg) => {
                   </>
                 )}
               </div>
-
               {!isEditingGroup && selectedChat.admin?._id === currentUserId && (
                 <div className="modal-footer">
                   <button
@@ -1699,7 +1541,6 @@ socket.on("newMessage", async (msg) => {
                   >
                     Edit Group
                   </button>
-
                   <button className="delete-group-btn" onClick={deleteGroup}>
                     Delete Group
                   </button>
@@ -1709,7 +1550,6 @@ socket.on("newMessage", async (msg) => {
           </div>
         )}
       </div>
-
       <Footer />
     </>
   );

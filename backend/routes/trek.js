@@ -223,7 +223,6 @@ router.put("/like/:id", protect, async (req, res) => {
     } else {
       trek.likes.push(req.user._id);
 
-      // Create notification (don't notify yourself)
       if (trek.user.toString() !== req.user._id.toString()) {
         await Notification.create({
           recipient: trek.user,
@@ -234,7 +233,6 @@ router.put("/like/:id", protect, async (req, res) => {
           message: `liked your post "${trek.title}"`,
         });
 
-        // Emit socket
         const io = req.app.get("io");
         io.to(trek.user.toString()).emit("newNotification");
       }
@@ -255,7 +253,6 @@ router.post("/comment/:id", protect, async (req, res) => {
 
     const populated = await trek.populate("comments.user", "name profilePic");
 
-    // Create notification (don't notify yourself)
     if (trek.user.toString() !== req.user._id.toString()) {
       await Notification.create({
         recipient: trek.user,

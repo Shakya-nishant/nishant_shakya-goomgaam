@@ -7,7 +7,7 @@
 }
 
 /* SIDEBAR */
-.sidebar {
+.dashboard .sidebar {
   width: 260px;
   background: #ffffff;
   padding: 20px;
@@ -16,11 +16,11 @@
   overflow: hidden; /* no scroll */
 }
 
-.profile-box {
+.dashboard .profile-box {
   text-align: center;
 }
 
-.profile-avatar {
+.dashboard .profile-avatar {
   width: 90px;
   height: 90px;
   border-radius: 50%;
@@ -36,12 +36,12 @@
   margin: 20px 0;
 }
 
-.menu {
+.dashboard .menu {
   list-style: none;
   padding: 0;
 }
 
-.menu li {
+.dashboard .menu li {
   padding: 12px;
   margin-bottom: 8px;
   border-radius: 8px;
@@ -51,16 +51,16 @@
   gap: 10px;
 }
 
-.menu li.active {
+.dashboard .menu li.active {
   background: #22c55e;
   color: white;
 }
 
-.icon {
+.dashboard .icon {
   font-size: 16px;
 }
 
-.btn {
+.dashboard .btn {
   width: 100%;
   padding: 12px;
   border: none;
@@ -74,70 +74,70 @@
   gap: 8px;
 }
 
-.sos {
+.dashboard .sos {
   background: #ef4444;
 }
 
-.weather {
+.dashboard .weather {
   background: #f97316;
 }
 
-.edit {
+.dashboard .edit {
   background: #3b82f6;
 }
 
 /* CONTENT */
-.content {
+.dashboard .content {
   flex: 1;
   padding: 30px;
   overflow-y: auto; /* 👈 THIS MAKES IT SCROLLABLE */
   height: 100vh; /* full height */
 }
 
-.profile-details {
+.dashboard .profile-details {
   background: white;
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 25px;
 }
 
-.profile-details p {
+.dashboard .profile-details p {
   margin: 8px 0;
 }
 
 /* STATS */
-.stats {
+.dashboard .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-.stat-card {
+.dashboard .stat-card {
   background: white;
   padding: 20px;
   border-radius: 12px;
 }
 
-.stat-card span {
+.dashboard .stat-card span {
   font-size: 14px;
   color: gray;
 }
 
-.loading {
+.dashboard .loading {
   padding: 50px;
   text-align: center;
   font-size: 18px;
 }
 
-.logout {
+.dashboard .logout {
   background: #6b7280;
 }
 
-.logout:hover {
+.dashboard .logout:hover {
   background: #4b5563;
 }
 
-.leaderboard-grid {
+.dashboard .leaderboard-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr); /* 5 users per row */
   gap: 10px;
@@ -146,7 +146,7 @@
   overflow-y: auto;
 }
 
-.leaderboard-item {
+.dashboard .leaderboard-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -161,35 +161,35 @@
     box-shadow 0.2s;
 }
 
-.leaderboard-item:hover {
+.dashboard .leaderboard-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.leaderboard-avatar {
+.dashboard .leaderboard-avatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
   margin-bottom: 6px;
 }
 
-.leaderboard-name {
+.dashboard .leaderboard-name {
   font-weight: 500;
   font-size: 0.9rem;
 }
 
-.leaderboard-points {
+.dashboard .leaderboard-points {
   font-size: 0.8rem;
   color: #555;
 }
 
-.mytrek-image img {
+.dashboard .mytrek-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.no-image {
+.dashboard .no-image {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -198,35 +198,35 @@
 
 /* DETAILS */
 
-.mytrek-details h4 {
+.dashboard .mytrek-details h4 {
   margin: 0;
 }
 
-.mytrek-details span {
+.dashboard .mytrek-details span {
   font-size: 14px;
   color: #555;
 }
 
 /* BUTTONS */
 
-.mytrek-buttons button {
+.dashboard .mytrek-buttons button {
   padding: 6px 10px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
 
-.edit-btn {
+.dashboard .edit-btn {
   background: #3b82f6;
   color: white;
 }
 
-.delete-btn {
+.dashboard .delete-btn {
   background: #ef4444;
   color: white;
 }
 
-.map-modal {
+.dashboard .map-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -240,7 +240,7 @@
 }
 
 /* MAIN BOX */
-.map-content {
+.dashboard .map-content {
   background: #fff;
   width: 720px;
   border-radius: 10px;
@@ -249,7 +249,7 @@
 }
 
 /* HEADER */
-.map-header {
+.dashboard .map-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -258,13 +258,13 @@
 }
 
 /* DIVIDER */
-.map-divider {
+.dashboard .map-divider {
   height: 2px;
   background: #000000;
 }
 
 /* INNER BORDER BOX */
-.map-inner-box {
+.dashboard .map-inner-box {
   margin: 12px;
   border: 2px solid #ccc;
   padding: 8px;
@@ -272,12 +272,12 @@
 }
 
 /* MAP SIZE (4:3 RATIO) */
-.map-view {
+.dashboard .map-view {
   width: 100%;
   height: 400px; /* 4:3 ratio */
 }
 
-.close-btn {
+.dashboard .close-btn {
   width: 35px;
   height: 35px;
   border-radius: 50%;
@@ -298,7 +298,7 @@
 }
 
 /* 🔥 Glow effect on hover */
-.close-btn:hover {
+.dashboard .close-btn:hover {
   background: #ff1a1a;
   transform: scale(1.1);
 
@@ -309,13 +309,13 @@
     0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.saved-treks-container {
+.dashboard .saved-treks-container {
   padding: 20px;
   width: 90%;
   margin: 0 auto;
 }
 
-.saved-treks-header {
+.dashboard .saved-treks-header {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -325,7 +325,7 @@
 }
 
 /* Main Card */
-.saved-trek-card {
+.dashboard .saved-trek-card {
   background: rgb(255, 255, 255);
   border: 2px solid #e5e7eb;
   border-radius: 12px;
@@ -335,7 +335,7 @@
 }
 
 /* User Info */
-.trek-user-info {
+.dashboard .trek-user-info {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -344,7 +344,7 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.user-pfp {
+.dashboard .user-pfp {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -353,14 +353,14 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.username {
+.dashboard .username {
   font-weight: 600;
   font-size: 16px;
   color: #1f2937;
   flex: 1;
 }
 
-.menu-icon {
+.dashboard .menu-icon {
   font-size: 24px;
   font-weight: bold;
   color: #6b7280;
@@ -370,27 +370,27 @@
   transition: background 0.2s;
 }
 
-.menu-icon:hover {
+.dashboard .menu-icon:hover {
   background: #e5e7eb;
 }
 
 /* Content Box */
-.trek-content-box {
+.dashboard .trek-content-box {
   padding: 16px;
 }
 
-.trek-content {
+.dashboard .trek-content {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
 }
 
-.trek-image {
+.dashboard .trek-image {
   flex: 1 1 420px;
   min-width: 300px;
 }
 
-.trek-image img {
+.dashboard .trek-image img {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;

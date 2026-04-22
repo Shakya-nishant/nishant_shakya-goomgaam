@@ -9,7 +9,6 @@ const sendSOSMail = require("../Config/mailer");
 const Notification = require("../models/Notification");
 const mongoose = require("mongoose");
 
-// ====================== USERS GROWTH ======================
 router.get("/analytics/users", protect, async (req, res) => {
   const { period = "monthly" } = req.query;
   try {
@@ -62,7 +61,6 @@ router.get("/analytics/users", protect, async (req, res) => {
   }
 });
 
-// ====================== GROUP CHATS ======================
 router.get("/analytics/groups", protect, async (req, res) => {
   const { type = "All" } = req.query;
   try {
@@ -81,7 +79,6 @@ router.get("/analytics/groups", protect, async (req, res) => {
   }
 });
 
-// ====================== TOTAL POSTS & TREND ======================
 router.get("/analytics/posts", protect, async (req, res) => {
   const { period = "weekly" } = req.query;
   try {
@@ -130,13 +127,21 @@ router.get("/analytics/posts", protect, async (req, res) => {
       { $limit: 5 },
       {
         $project: {
-          title: 1, province: 1, district: 1,
-          createdAt: 1, comments: 1, likes: 1,
-          photos: 1, user: 1,
+          title: 1,
+          province: 1,
+          district: 1,
+          createdAt: 1,
+          comments: 1,
+          likes: 1,
+          photos: 1,
+          user: 1,
         },
       },
     ]);
-    await Trek.populate(topCommented, { path: "user", select: "name profilePic" });
+    await Trek.populate(topCommented, {
+      path: "user",
+      select: "name profilePic",
+    });
 
     res.json({ totalPosts, trend: formattedTrend, topLiked, topCommented });
   } catch (error) {
@@ -145,7 +150,6 @@ router.get("/analytics/posts", protect, async (req, res) => {
   }
 });
 
-// ====================== REPORTS ======================
 router.get("/analytics/reports", protect, async (req, res) => {
   const { type = "All" } = req.query;
   try {
@@ -190,7 +194,7 @@ router.get("/analytics/reports", protect, async (req, res) => {
 router.delete("/delete-trek/:trekId", protect, async (req, res) => {
   console.log("DELETE TREK ROUTE HIT, trekId:", req.params.trekId);
   const { trekId } = req.params;
- const { reportId } = req.body || {};
+  const { reportId } = req.body || {};
 
   try {
     if (!mongoose.Types.ObjectId.isValid(trekId)) {
@@ -202,32 +206,30 @@ router.delete("/delete-trek/:trekId", protect, async (req, res) => {
       return res.status(404).json({ message: "Trek not found" });
     }
 
-    // Use findByIdAndDelete instead of deleteOne to avoid hook issues
     await Trek.findByIdAndDelete(trekId);
 
-    // Cleanup reports — fully isolated
     try {
       if (reportId && mongoose.Types.ObjectId.isValid(reportId)) {
         await Report.findByIdAndUpdate(reportId, { $set: { handled: true } });
       }
       await Report.updateMany(
         { trekId: new mongoose.Types.ObjectId(trekId) },
-        { $set: { handled: true } }
+        { $set: { handled: true } },
       );
     } catch (cleanupErr) {
       console.warn("Report cleanup warning:", cleanupErr.message);
     }
 
     return res.status(200).json({ message: "Trek deleted successfully" });
-
   } catch (error) {
     console.error("Delete trek error:", error.message);
     console.error(error.stack);
-    return res.status(500).json({ message: "Server error", detail: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", detail: error.message });
   }
 });
 
-// ====================== SEND WARNING ======================
 router.post("/warning/:trekId", protect, async (req, res) => {
   const { trekId } = req.params;
   const { reportId } = req.body;

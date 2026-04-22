@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../users/Navbar";
 import Footer from "../users/Footer";
 import {
@@ -12,9 +13,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "../css/Analytics.css";
-import { FaHeart, FaComment } from "react-icons/fa";
+import {
+  FaHeart,
+  FaComment,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaExclamationTriangle,
+  FaTrashAlt,
+  FaFlag,
+} from "react-icons/fa";
 
 const Analytics = () => {
+  const navigate = useNavigate();
   const [usersData, setUsersData] = useState([]);
   const [groupChats, setGroupChats] = useState([]);
   const [totalPosts, setTotalPosts] = useState(0);
@@ -22,16 +32,13 @@ const Analytics = () => {
   const [topLiked, setTopLiked] = useState([]);
   const [topCommented, setTopCommented] = useState([]);
   const [reports, setReports] = useState([]);
-
   const [userPeriod, setUserPeriod] = useState("monthly");
   const [groupFilter, setGroupFilter] = useState("All");
   const [postPeriod, setPostPeriod] = useState("weekly");
   const [reportType, setReportType] = useState("All");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("users");
-
   const token = localStorage.getItem("token");
 
   const fetchAnalytics = async () => {
@@ -41,30 +48,21 @@ const Analytics = () => {
       const [usersRes, groupsRes, postsRes, reportsRes] = await Promise.all([
         axios.get(
           `http://localhost:5000/api/admin/analytics/users?period=${userPeriod}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         ),
         axios.get(
           `http://localhost:5000/api/admin/analytics/groups?type=${groupFilter}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         ),
         axios.get(
           `http://localhost:5000/api/admin/analytics/posts?period=${postPeriod}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         ),
         axios.get(
           `http://localhost:5000/api/admin/analytics/reports?type=${reportType}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         ),
       ]);
-
       setUsersData(usersRes.data || []);
       setGroupChats(groupsRes.data || []);
       setTotalPosts(postsRes.data?.totalPosts || 0);
@@ -89,9 +87,28 @@ const Analytics = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       alert("Warning sent successfully!");
-      fetchAnalytics(); // Refresh data after warning
+      fetchAnalytics();
     } catch (err) {
       alert("Failed to send warning");
+      console.error(err);
+    }
+  };
+
+  const handleDeletePost = async (trekId, reportId) => {
+    if (!window.confirm("Are you sure you want to delete this trek post?"))
+      return;
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/admin/delete-trek/${trekId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { reportId },
+        },
+      );
+      alert("Trek deleted successfully!");
+      fetchAnalytics();
+    } catch (err) {
+      alert("Failed to delete trek");
       console.error(err);
     }
   };
@@ -129,47 +146,24 @@ const Analytics = () => {
 
   const getProfilePicUrl = (user) => {
     if (!user) return "https://via.placeholder.com/40";
-
-    const pic = user.profilePic || user.profilePicture; // profilePic first
+    const pic = user.profilePic || user.profilePicture;
     if (!pic) return "https://via.placeholder.com/40";
-
     return pic.startsWith("http") ? pic : `http://localhost:5000${pic}`;
   };
-  // Helper function for trek image
+
   const getTrekImageUrl = (photos) => {
-    if (!photos || photos.length === 0) {
-      return "https://via.placeholder.com/400x300?text=Trek";
-    }
+    if (!photos || photos.length === 0)
+      return "https://via.placeholder.com/400x225?text=Trek";
     const photo = photos[0];
     return photo.startsWith("http") ? photo : `http://localhost:5000${photo}`;
   };
 
-  // Top 5 with proper sorting
   const top5Liked = [...topLiked]
     .sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0))
     .slice(0, 5);
-
   const top5Commented = [...topCommented]
     .sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0))
     .slice(0, 5);
-
-    const handleDeletePost = async (trekId, reportId) => {
-  if (!window.confirm("Are you sure you want to delete this trek post?")) return;
-  try {
-    await axios.delete(
-      `http://localhost:5000/api/admin/delete-trek/${trekId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { reportId },
-      }
-    );
-    alert("Trek deleted successfully!");
-    fetchAnalytics();
-  } catch (err) {
-    alert("Failed to delete trek");
-    console.error(err);
-  }
-};
 
   if (loading) {
     return (
@@ -203,57 +197,38 @@ const Analytics = () => {
   }
 
   return (
-    <>
+    <div className="analytics-page-wrapper">
       <Navbar />
       <div className="analytics-dashboard">
-        {/* Sidebar */}
         <div className="sidebar">
           <div className="sidebar-header">
             <h2>Analytics Dashboard</h2>
           </div>
           <ul className="sidebar-menu">
-            <li
-              className={activeTab === "users" ? "active" : ""}
-              onClick={() => setActiveTab("users")}
-            >
-              Users
-            </li>
-            <li
-              className={activeTab === "group" ? "active" : ""}
-              onClick={() => setActiveTab("group")}
-            >
-              Group Chat
-            </li>
-            <li
-              className={activeTab === "posts" ? "active" : ""}
-              onClick={() => setActiveTab("posts")}
-            >
-              Total Post
-            </li>
-            <li
-              className={activeTab === "top" ? "active" : ""}
-              onClick={() => setActiveTab("top")}
-            >
-              Top Like & Comments
-            </li>
-            <li
-              className={activeTab === "reports" ? "active" : ""}
-              onClick={() => setActiveTab("reports")}
-            >
-              Reports
-            </li>
+            {[
+              { key: "users", label: "Users" },
+              { key: "group", label: "Group Chat" },
+              { key: "posts", label: "Total Post" },
+              { key: "top", label: "Top Like & Comments" },
+              { key: "reports", label: "Reports" },
+            ].map(({ key, label }) => (
+              <li
+                key={key}
+                className={activeTab === key ? "active" : ""}
+                onClick={() => setActiveTab(key)}
+              >
+                {label}
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* Main Content */}
         <div className="main-content">
-          {/* Content Header */}
           <div className="content-header">
             <div className="header-left">
               <h2 className="content-title">{getHeaderTitle()}</h2>
               <p className="content-subtitle">{getHeaderSubtitle()}</p>
             </div>
-
             {activeTab === "top" && (
               <div className="top-header-stats">
                 <div className="stat-box">
@@ -266,7 +241,6 @@ const Analytics = () => {
                 </div>
               </div>
             )}
-
             <div className="content-filter">
               {(activeTab === "users" || activeTab === "posts") && (
                 <select
@@ -282,7 +256,6 @@ const Analytics = () => {
                   <option value="yearly">Yearly</option>
                 </select>
               )}
-
               {activeTab === "group" && (
                 <select
                   className="filter-select"
@@ -294,7 +267,6 @@ const Analytics = () => {
                   <option value="normal">Normal</option>
                 </select>
               )}
-
               {activeTab === "reports" && (
                 <select
                   className="filter-select"
@@ -314,9 +286,7 @@ const Analytics = () => {
             </div>
           </div>
 
-          {/* Data Area */}
           <div className="data-area">
-            {/* Users Growth */}
             {activeTab === "users" && (
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
@@ -337,7 +307,6 @@ const Analytics = () => {
               </div>
             )}
 
-            {/* Total Posts */}
             {activeTab === "posts" && (
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
@@ -358,7 +327,6 @@ const Analytics = () => {
               </div>
             )}
 
-            {/* Group Chats */}
             {activeTab === "group" && (
               <div className="groups-grid">
                 {groupChats.length === 0 ? (
@@ -410,79 +378,22 @@ const Analytics = () => {
 
             {activeTab === "top" && (
               <div className="top-liked-comment-container">
-                {/* Most Liked */}
                 <div className="top-column">
                   <h3 className="section-title">
-                    ❤️ Most Liked Treks{" "}
+                    <FaHeart className="section-title-icon liked-icon" />
+                    Most Liked Treks
                     <span className="count-badge">Top 5</span>
                   </h3>
                   <div className="trek-scrollable">
                     {top5Liked.length > 0 ? (
                       top5Liked.map((trek, i) => (
-                        <div className="trek-card" key={i}>
-                          {/* User Row */}
-
-                          <div className="trek-user">
-                            <div className="user-pfp-wrapper">
-                              <img
-                                src={getProfilePicUrl(trek.user)}
-                                alt={trek.user?.name}
-                                className="user-pfp"
-                                onError={(e) =>
-                                  (e.target.src =
-                                    "https://via.placeholder.com/32")
-                                }
-                              />
-                            </div>
-                            <p className="user-name">
-                              {trek.user?.name || "Unknown"}
-                            </p>
-                          </div>
-
-                          {/* Trek Image 16:10 */}
-                          <div className="trek-image">
-                            <img
-                              src={getTrekImageUrl(trek.photos)}
-                              alt={trek.title}
-                              onError={(e) => {
-                                e.target.src =
-                                  "https://via.placeholder.com/800x500?text=Trek";
-                              }}
-                            />
-                          </div>
-
-                          {/* Trek Title */}
-                          <h4 className="trek-title">{trek.title}</h4>
-
-                          {/* Trek Location */}
-                          <p className="trek-location">
-                            📍{" "}
-                            {trek.province ||
-                              trek.location ||
-                              trek.district ||
-                              "Unknown Location"}
-                          </p>
-
-                          {/* Shared Date */}
-                          <p className="trek-date">
-                            Shared on:{" "}
-                            {new Date(trek.createdAt).toLocaleDateString(
-                              "en-CA",
-                            )}
-                          </p>
-
-                          {/* Stats */}
-                          <div className="trek-stats">
-                            <span>
-                              <FaHeart className="icon" />{" "}
-                              {trek.likes?.length || 0}
-                            </span>
-                            <span>
-                              <FaComment className="icon" />{" "}
-                              {trek.comments?.length || 0}
-                            </span>
-                          </div>
-                        </div>
+                        <TrekCard
+                          key={i}
+                          trek={trek}
+                          getProfilePicUrl={getProfilePicUrl}
+                          getTrekImageUrl={getTrekImageUrl}
+                          navigate={navigate}
+                        />
                       ))
                     ) : (
                       <p className="no-data">No liked treks found</p>
@@ -490,79 +401,22 @@ const Analytics = () => {
                   </div>
                 </div>
 
-                {/* Most Commented */}
                 <div className="top-column">
                   <h3 className="section-title">
-                    💬 Most Commented Treks{" "}
+                    <FaComment className="section-title-icon commented-icon" />
+                    Most Commented Treks
                     <span className="count-badge">Top 5</span>
                   </h3>
                   <div className="trek-scrollable">
                     {top5Commented.length > 0 ? (
                       top5Commented.map((trek, i) => (
-                        <div className="trek-card" key={i}>
-                          {/* User Row */}
-                          {/* User Row */}
-                          <div className="trek-user">
-                            <div className="user-pfp-wrapper">
-                              <img
-                                src={getProfilePicUrl(trek.user)}
-                                alt={trek.user?.name}
-                                className="user-pfp"
-                                onError={(e) =>
-                                  (e.target.src =
-                                    "https://via.placeholder.com/32")
-                                }
-                              />
-                            </div>
-                            <p className="user-name">
-                              {trek.user?.name || "Unknown"}
-                            </p>
-                          </div>
-
-                          {/* Trek Image 16:10 */}
-                          <div className="trek-image">
-                            <img
-                              src={getTrekImageUrl(trek.photos)}
-                              alt={trek.title}
-                              onError={(e) => {
-                                e.target.src =
-                                  "https://via.placeholder.com/800x500?text=Trek";
-                              }}
-                            />
-                          </div>
-
-                          {/* Trek Title */}
-                          <h4 className="trek-title">{trek.title}</h4>
-
-                          {/* Trek Location */}
-                          <p className="trek-location">
-                            📍{" "}
-                            {trek.province ||
-                              trek.location ||
-                              trek.district ||
-                              "Unknown Location"}
-                          </p>
-
-                          {/* Shared Date */}
-                          <p className="trek-date">
-                            Shared on:{" "}
-                            {new Date(trek.createdAt).toLocaleDateString(
-                              "en-CA",
-                            )}
-                          </p>
-
-                          {/* Stats */}
-                          <div className="trek-stats">
-                            <span>
-                              <FaHeart className="icon" />{" "}
-                              {trek.likes?.length || 0}
-                            </span>
-                            <span>
-                              <FaComment className="icon" />{" "}
-                              {trek.comments?.length || 0}
-                            </span>
-                          </div>
-                        </div>
+                        <TrekCard
+                          key={i}
+                          trek={trek}
+                          getProfilePicUrl={getProfilePicUrl}
+                          getTrekImageUrl={getTrekImageUrl}
+                          navigate={navigate}
+                        />
                       ))
                     ) : (
                       <p className="no-data">No commented treks found</p>
@@ -572,101 +426,201 @@ const Analytics = () => {
               </div>
             )}
 
-           {activeTab === "reports" && (
-  <div className="list-container">
-    {reports.length === 0 ? (
-      <p className="no-data">No reports found</p>
-    ) : (
-      reports.map((r) => (
-        <div className="report-card-new" key={r._id}>
-          {/* LEFT - Trek Image */}
-          <div className="report-left">
-            <img
-              src={
-                r.trekId?.photos?.[0]
-                  ? `http://localhost:5000${r.trekId.photos[0]}`
-                  : "https://via.placeholder.com/200x140?text=No+Image"
-              }
-              alt="trek"
-              className="report-trek-img"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/200x140?text=No+Image";
-              }}
-            />
-          </div>
-
-          {/* MIDDLE - Trek & User Info */}
-          <div className="report-middle">
-            {/* User Row */}
-            <div className="report-user-row">
-              <div className="report-user-pfp-wrapper">
-                <img
-                  src={
-                    r.trekId?.user?.profilePic
-                      ? `http://localhost:5000${r.trekId.user.profilePic}`
-                      : "https://via.placeholder.com/36"
-                  }
-                  alt={r.trekId?.user?.name}
-                  className="report-user-pfp"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/36";
-                  }}
-                />
+            {activeTab === "reports" && (
+              <div className="list-container">
+                {reports.length === 0 ? (
+                  <p className="no-data">No reports found</p>
+                ) : (
+                  reports.map((r) => (
+                    <ReportCard
+                      key={r._id}
+                      report={r}
+                      navigate={navigate}
+                      onWarn={() =>
+                        sendWarning(r.trekId?._id || r.trekId, r._id)
+                      }
+                      onDelete={() =>
+                        handleDeletePost(r.trekId?._id || r.trekId, r._id)
+                      }
+                    />
+                  ))
+                )}
               </div>
-              <span className="report-user-name">
-                {r.trekId?.user?.name || "Unknown User"}
-              </span>
-            </div>
-
-            <h4 className="report-trek-title">
-              {r.trekId?.title || "Untitled Trek"}
-            </h4>
-
-            <p className="report-meta">
-              📍 {r.trekId?.province || "Unknown Location"}
-            </p>
-
-            <p className="report-meta">
-              🗓️ Shared:{" "}
-              {r.trekId?.createdAt
-                ? new Date(r.trekId.createdAt).toLocaleDateString("en-CA")
-                : "N/A"}
-            </p>
-
-            <div className="report-reason-badge">
-              ⚠️ {r.type}
-            </div>
-
-            <div className="report-count-badge">
-              🚩 {r.reportCount || 1} Report{r.reportCount > 1 ? "s" : ""}
-            </div>
-          </div>
-
-          {/* RIGHT - Actions */}
-          <div className="report-right">
-            <button
-              className="action-btn warn-action-btn"
-              onClick={() => sendWarning(r.trekId?._id || r.trekId, r._id)}
-            >
-              ⚠️ Send Warning
-            </button>
-            <button
-              className="action-btn delete-action-btn"
-              onClick={() => handleDeletePost(r.trekId?._id || r.trekId, r._id)}
-            >
-              🗑️ Delete Post
-            </button>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-)}
+            )}
           </div>
         </div>
       </div>
       <Footer />
-    </>
+    </div>
+  );
+};
+
+const TrekCard = ({ trek, getProfilePicUrl, getTrekImageUrl, navigate }) => {
+  const handleUserClick = (e) => {
+    e.stopPropagation();
+    if (trek.user?._id) navigate(`/profile/${trek.user._id}`);
+  };
+
+  const handleCardClick = () => {
+    if (trek._id) navigate(`/fullpost/${trek._id}`);
+  };
+
+  return (
+    <div
+      className="trek-card"
+      onClick={handleCardClick}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="trek-user" onClick={handleUserClick} title="View profile">
+        <div className="user-pfp-wrapper">
+          <img
+            src={getProfilePicUrl(trek.user)}
+            alt={trek.user?.name}
+            className="user-pfp"
+            onError={(e) => (e.target.src = "https://via.placeholder.com/40")}
+          />
+        </div>
+        <p className="user-name">{trek.user?.name || "Unknown"}</p>
+      </div>
+
+      <div className="trek-image">
+        <img
+          src={getTrekImageUrl(trek.photos)}
+          alt={trek.title}
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/800x450?text=Trek";
+          }}
+        />
+      </div>
+
+      <h4 className="trek-title">{trek.title}</h4>
+
+      <p className="trek-location">
+        <FaMapMarkerAlt className="trek-meta-icon" />
+        {trek.province || trek.location || trek.district || "Unknown Location"}
+      </p>
+
+      <p className="trek-date">
+        <FaCalendarAlt className="trek-meta-icon" />
+        {new Date(trek.createdAt).toLocaleDateString("en-CA")}
+      </p>
+
+      <div className="trek-stats">
+        <span>
+          <FaHeart className="icon likes-icon" />
+          {trek.likes?.length || 0}
+        </span>
+        <span>
+          <FaComment className="icon comments-icon" />
+          {trek.comments?.length || 0}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const ReportCard = ({ report: r, navigate, onWarn, onDelete }) => {
+  const trekImageUrl = r.trekId?.photos?.[0]
+    ? r.trekId.photos[0].startsWith("http")
+      ? r.trekId.photos[0]
+      : `http://localhost:5000${r.trekId.photos[0]}`
+    : "https://via.placeholder.com/320x180?text=No+Image";
+
+  const userPicUrl = r.trekId?.user?.profilePic
+    ? r.trekId.user.profilePic.startsWith("http")
+      ? r.trekId.user.profilePic
+      : `http://localhost:5000${r.trekId.user.profilePic}`
+    : "https://via.placeholder.com/40";
+
+  const handleCardClick = () => {
+    const trekId = r.trekId?._id || r.trekId;
+    if (trekId) navigate(`/fullpost/${trekId}`);
+  };
+
+  const handleUserClick = (e) => {
+    e.stopPropagation();
+    const userId = r.trekId?.user?._id;
+    if (userId) navigate(`/profile/${userId}`);
+  };
+
+  return (
+    <div
+      className="report-card-new"
+      onClick={handleCardClick}
+      style={{ cursor: "pointer" }}
+    >
+      <div className="report-left">
+        <img
+          src={trekImageUrl}
+          alt="trek"
+          className="report-trek-img"
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/320x180?text=No+Image";
+          }}
+        />
+      </div>
+
+      <div className="report-middle">
+        <div
+          className="report-user-row"
+          onClick={handleUserClick}
+          title="View profile"
+          style={{ cursor: "pointer" }}
+        >
+          <div className="report-user-pfp-wrapper">
+            <img
+              src={userPicUrl}
+              alt={r.trekId?.user?.name}
+              className="report-user-pfp"
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/40";
+              }}
+            />
+          </div>
+          <span className="report-user-name">
+            {r.trekId?.user?.name || "Unknown User"}
+          </span>
+        </div>
+
+        <h4 className="report-trek-title">
+          {r.trekId?.title || "Untitled Trek"}
+        </h4>
+
+        <p className="report-meta">
+          <FaMapMarkerAlt className="report-meta-icon" />
+          {r.trekId?.province || "Unknown Location"}
+        </p>
+        <p className="report-meta">
+          <FaCalendarAlt className="report-meta-icon" />
+          Shared:{" "}
+          {r.trekId?.createdAt
+            ? new Date(r.trekId.createdAt).toLocaleDateString("en-CA")
+            : "N/A"}
+        </p>
+
+        <div className="report-badges-row">
+          <div className="report-count-badge">
+            <FaFlag className="badge-icon" />
+            {r.reportCount || 1} Report{r.reportCount > 1 ? "s" : ""}
+          </div>
+          <div className="report-reason-badge">
+            <FaExclamationTriangle className="badge-icon" />
+            {r.type}
+          </div>
+        </div>
+      </div>
+
+      <div className="report-right" onClick={(e) => e.stopPropagation()}>
+        <button className="action-btn warn-action-btn" onClick={onWarn}>
+          <FaExclamationTriangle className="btn-icon" />
+          Send Warning
+        </button>
+        <button className="action-btn delete-action-btn" onClick={onDelete}>
+          <FaTrashAlt className="btn-icon" />
+          Delete Post
+        </button>
+      </div>
+    </div>
   );
 };
 

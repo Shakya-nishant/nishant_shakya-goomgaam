@@ -1,16 +1,28 @@
 /* ====================== MODERN ANALYTICS DASHBOARD ====================== */
+
+/* Page wrapper: ensures footer stays at bottom */
+.analytics-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+}
+
 .analytics-dashboard {
   display: flex;
-  flex: 1;                    
-  min-height: 0;             
-  background: #f8fafc;
+  flex: 1;
+  min-height: 0;
+  background: #f3f4f6;
   padding: 24px;
   gap: 24px;
   max-width: 100%;
   margin: 0 auto;
-  height: calc(100vh - 70px);  
+  width: 100%;
+  box-sizing: border-box;
+  /* Remove fixed height so footer can sit below naturally */
 }
 
+/* ====================== SIDEBAR ====================== */
 .analytics-dashboard .sidebar {
   width: 290px;
   background: #ffffff;
@@ -19,8 +31,10 @@
   padding: 24px 0;
   border: 1px solid #f1f5f9;
   flex-shrink: 0;
-  height: 100%;                  
-  overflow-y: auto;                
+  height: fit-content;
+  position: sticky;
+  top: 24px;
+  overflow-y: auto;
 }
 
 .analytics-dashboard .sidebar-header {
@@ -33,6 +47,12 @@
   font-size: 1.75rem;
   font-weight: 700;
   color: #1e2937;
+}
+
+.analytics-dashboard .sidebar-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .analytics-dashboard .sidebar-menu li {
@@ -56,15 +76,16 @@
   border-left-color: #3b82f6;
 }
 
-/* Main Content */
+/* ====================== MAIN CONTENT ====================== */
 .analytics-dashboard .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
-/* Content Header */
+/* ====================== CONTENT HEADER ====================== */
 .analytics-dashboard .content-header {
   background: white;
   padding: 24px 28px;
@@ -73,6 +94,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
   min-height: 90px;
 }
 
@@ -94,6 +117,33 @@
   font-size: 1.02rem;
 }
 
+.analytics-dashboard .top-header-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.analytics-dashboard .stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 20px;
+  text-align: center;
+}
+
+.analytics-dashboard .stat-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.analytics-dashboard .stat-label {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
 .analytics-dashboard .content-filter .filter-select {
   padding: 12px 20px;
   border: 1px solid #e2e8f0;
@@ -102,9 +152,14 @@
   font-size: 1rem;
   color: #334155;
   cursor: pointer;
+  outline: none;
 }
 
-/* Data Area */
+.analytics-dashboard .content-filter .filter-select:focus {
+  border-color: #3b82f6;
+}
+
+/* ====================== DATA AREA ====================== */
 .analytics-dashboard .data-area {
   background: white;
   border-radius: 20px;
@@ -113,6 +168,8 @@
   border: 1px solid #f1f5f9;
   flex: 1;
   min-height: 520px;
+  display: flex;
+  flex-direction: column;
 }
 
 .analytics-dashboard .chart-container {
@@ -121,57 +178,24 @@
   min-height: 460px;
 }
 
-/* Lists */
+/* ====================== LISTS ====================== */
 .analytics-dashboard .list-container {
-  max-height: 100%;
+  flex: 1;
   overflow-y: auto;
-}
-
-.analytics-dashboard .list-item, .analytics-dashboard .report-item {
-  padding: 18px 0;
-  border-bottom: 1px solid #f1f5f9;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.analytics-dashboard .list-item:last-child, .analytics-dashboard .report-item:last-child {
-  border-bottom: none;
-}
-
-.analytics-dashboard .list-item img {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  object-fit: cover;
-}
+.analytics-dashboard .list-container::-webkit-scrollbar { width: 5px; }
+.analytics-dashboard .list-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.analytics-dashboard .list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
 .analytics-dashboard .no-data {
   text-align: center;
   color: #64748b;
   padding: 80px 0;
   font-size: 1.1rem;
-}
-
-/* Top Posts */
-.analytics-dashboard .top-posts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-}
-
-.analytics-dashboard .top-item {
-  background: #f8fafc;
-  padding: 18px;
-  border-radius: 14px;
-  border-left: 5px solid #3b82f6;
-}
-
-.analytics-dashboard .metric {
-  font-weight: 600;
-  color: #1e40af;
-  margin-top: 6px;
 }
 
 .analytics-dashboard .warn-btn {
@@ -188,20 +212,50 @@
   background: #dc2626;
 }
 
-/* Responsive */
+.retry-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ====================== RESPONSIVE: SIDEBAR COLLAPSE ====================== */
 @media (max-width: 1080px) {
   .analytics-dashboard {
     flex-direction: column;
   }
+
   .analytics-dashboard .sidebar {
     width: 100%;
-    height: auto;
     position: static;
+    height: auto;
+  }
+
+  .analytics-dashboard .sidebar-menu {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+
+  .analytics-dashboard .sidebar-menu li {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .analytics-dashboard .sidebar-menu li.active {
+    border-left: none;
+    border-bottom-color: #3b82f6;
+    background: #f0f9ff;
   }
 }
 
-/* ====================== GROUP CARDS GRID - CIRCULAR PFP + BORDER ====================== */
-
+/* ====================== GROUP CARDS ====================== */
 .analytics-dashboard .groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -215,7 +269,7 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: all 0.3s ease;
-  border: 2px solid #e2e8f0;           /* Added border as requested */
+  border: 2px solid #e2e8f0;
   padding-bottom: 10px;
 }
 
@@ -236,9 +290,9 @@
 .analytics-dashboard .group-card-pfp {
   width: 110px;
   height: 110px;
-  border-radius: 50%;           /* Made circular */
+  border-radius: 50%;
   object-fit: cover;
-  border: 4px solid rgb(122, 122, 122);      /* White border inside circle */
+  border: 4px solid rgb(122, 122, 122);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -267,45 +321,32 @@
   font-weight: 600;
 }
 
-/* Responsive - Aim for 4 cards per row on large screens */
 @media (min-width: 1400px) {
-  .analytics-dashboard .groups-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  .analytics-dashboard .groups-grid { grid-template-columns: repeat(4, 1fr); }
 }
-
 @media (max-width: 1200px) {
-  .analytics-dashboard .groups-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .analytics-dashboard .groups-grid { grid-template-columns: repeat(3, 1fr); }
 }
-
 @media (max-width: 900px) {
-  .analytics-dashboard .groups-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .analytics-dashboard .groups-grid { grid-template-columns: repeat(2, 1fr); }
 }
-
 @media (max-width: 600px) {
-  .analytics-dashboard .groups-grid {
-    grid-template-columns: 1fr;
-  }
+  .analytics-dashboard .groups-grid { grid-template-columns: 1fr; }
 }
 
+/* =============================================
+   TOP LIKED & COMMENTED — REDESIGNED
+   (same blue/white theme as original)
+============================================= */
 
-
-
-/* ====================== TREK CARD - FULL CSS ====================== */
-
-/* Container: 2-column grid */
 .top-liked-comment-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
-/* Column */
 .top-column {
   display: flex;
   flex-direction: column;
@@ -315,22 +356,29 @@
 
 .top-column h3.section-title {
   margin: 0 0 16px 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1e2937;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
+.section-title-icon { font-size: 1rem; }
+.liked-icon { color: #ef4444; }
+.commented-icon { color: #3b82f6; }
+
 .count-badge {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   background: #e0f2fe;
   color: #0369a1;
   padding: 3px 10px;
   border-radius: 9999px;
   font-weight: 600;
+  margin-left: auto;
 }
 
 /* Scrollable list */
@@ -344,25 +392,12 @@
   padding-bottom: 8px;
 }
 
-.trek-scrollable::-webkit-scrollbar {
-  width: 5px;
-}
+.trek-scrollable::-webkit-scrollbar { width: 5px; }
+.trek-scrollable::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.trek-scrollable::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.trek-scrollable::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-.trek-scrollable::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-.trek-scrollable::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-
-.trek-scrollable::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* ================= TREK CARD ================= */
+/* ===== TREK CARD ===== */
 .trek-card {
   background: #fff;
   border-radius: 18px;
@@ -383,19 +418,27 @@
   border-color: #bfdbfe;
 }
 
-/* ================= USER ROW ================= */
+/* ===== USER ROW ===== */
 .trek-user {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 8px;
+  padding: 2px 6px 2px 2px;
+  transition: background 0.2s;
 }
 
-/* Wrapper enforces the circle size */
+.trek-user:hover {
+  background: #f0f9ff;
+}
+
 .user-pfp-wrapper {
-  width: 45px;
-  height: 45px;
-  min-width: 45px;
-  min-height: 45px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid #e2e8f0;
@@ -406,14 +449,10 @@
   justify-content: center;
 }
 
-/* Image fills the wrapper perfectly */
 .user-pfp {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  object-fit: contain;
-  object-position: center;  /* focuses on face area */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
   border-radius: 50%;
 }
@@ -428,7 +467,7 @@
   text-overflow: ellipsis;
 }
 
-/* ================= TREK IMAGE 16:10 ================= */
+/* ===== TREK IMAGE 16:9 ===== */
 .trek-image {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -451,46 +490,55 @@
   transform: scale(1.03);
 }
 
-/* ================= TREK TITLE ================= */
+/* ===== TREK INFO ===== */
 .trek-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1e2937;
   line-height: 1.35;
   display: -webkit-box;
-  
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* ================= TREK LOCATION ================= */
 .trek-location {
   color: #475569;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   margin: 0;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ================= SHARED DATE ================= */
 .trek-date {
   color: #94a3b8;
   font-size: 0.82rem;
   margin: 0;
-  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-/* ================= STATS ROW ================= */
+.trek-meta-icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+/* ===== STATS ROW ===== */
 .trek-stats {
   display: flex;
   gap: 16px;
   font-size: 0.92rem;
   font-weight: 600;
   color: #1e40af;
-  padding-top: 4px;
+  padding-top: 6px;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -500,12 +548,10 @@
   gap: 5px;
 }
 
-.trek-stats .icon {
-  font-size: 0.88rem;
-  color: #3b82f6;
-}
+.trek-stats .icon { font-size: 0.88rem; }
+.trek-stats .likes-icon { color: #ef4444; }
+.trek-stats .comments-icon { color: #3b82f6; }
 
-/* ================= NO DATA ================= */
 .no-data {
   text-align: center;
   color: #94a3b8;
@@ -513,88 +559,96 @@
   font-size: 1rem;
 }
 
-/* ================= RESPONSIVE ================= */
+/* Responsive: top section */
 @media (max-width: 1100px) {
-  .top-liked-comment-container {
-    grid-template-columns: 1fr;
-  }
+  .top-liked-comment-container { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 768px) {
-  .trek-card {
-    padding: 12px;
-  }
-
-  .top-column h3.section-title {
-    font-size: 1.1rem;
-  }
-
-  .trek-title {
-    font-size: 0.95rem;
-  }
+  .trek-card { padding: 12px; }
+  .top-column h3.section-title { font-size: 1.1rem; }
+  .trek-title { font-size: 0.95rem; }
 }
 
+/* =============================================
+   REPORT CARD — REDESIGNED 3 SECTIONS
+   (same blue/white theme)
+============================================= */
 
-
-
-
-/* ====================== REPORT CARD NEW UI ====================== */
 .report-card-new {
   display: grid;
-  grid-template-columns: 200px 1fr 160px;
-  gap: 0;
+  grid-template-columns: 220px 1fr 160px;
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
   border: 1.5px solid #f1f5f9;
   overflow: hidden;
-  margin-bottom: 16px;
   transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .report-card-new:hover {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.11);
   transform: translateY(-2px);
+  border-color: #bfdbfe;
 }
 
-/* ── LEFT ── */
+/* ── LEFT: Trek image 16:9 ── */
 .report-left {
-  width: 200px;
-  min-height: 160px;
-  flex-shrink: 0;
+  position: relative;
   overflow: hidden;
   background: #f1f5f9;
 }
 
+/* Force 16:9 using padding trick on the wrapper */
+.report-left::before {
+  content: "";
+  display: block;
+  padding-top: 56.25%; /* 9/16 */
+}
+
 .report-trek-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
+  transition: transform 0.3s ease;
+}
+
+.report-card-new:hover .report-trek-img {
+  transform: scale(1.04);
 }
 
 /* ── MIDDLE ── */
 .report-middle {
-  padding: 18px 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   border-left: 1px solid #f1f5f9;
   border-right: 1px solid #f1f5f9;
+  min-width: 0;
 }
 
 .report-user-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: fit-content;
+  border-radius: 8px;
+  padding: 2px 8px 2px 2px;
+  transition: background 0.2s;
+}
+
+.report-user-row:hover {
+  background: #f0f9ff;
 }
 
 .report-user-pfp-wrapper {
   width: 36px;
   height: 36px;
   min-width: 36px;
-  min-height: 36px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid #e2e8f0;
@@ -612,7 +666,7 @@
 
 .report-user-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: #1e2937;
   white-space: nowrap;
   overflow: hidden;
@@ -621,7 +675,7 @@
 
 .report-trek-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1e2937;
   line-height: 1.3;
@@ -633,55 +687,86 @@
 
 .report-meta {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.report-meta-icon {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.report-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .report-reason-badge {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   background: #fef3c7;
   color: #92400e;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 9999px;
-  width: fit-content;
+  border: 1px solid #fcd34d;
 }
 
 .report-count-badge {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   background: #fee2e2;
   color: #b91c1c;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 9999px;
-  width: fit-content;
+  border: 1px solid #fca5a5;
 }
 
-/* ── RIGHT ── */
+.badge-icon {
+  font-size: 0.7rem;
+}
+
+/* ── RIGHT: Actions ── */
 .report-right {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 12px;
-  padding: 18px 16px;
+  gap: 10px;
+  padding: 16px 14px;
   background: #f8fafc;
 }
 
 .action-btn {
-  width: 100%;
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
   border: none;
   border-radius: 10px;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.15s ease;
   text-align: center;
+  white-space: nowrap;
+}
+
+.btn-icon {
+  font-size: 0.82rem;
+  flex-shrink: 0;
 }
 
 .action-btn:hover {
@@ -708,18 +793,31 @@
   background: #fecaca;
 }
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE: Report Card ── */
 @media (max-width: 900px) {
   .report-card-new {
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 160px 1fr;
     grid-template-rows: auto auto;
   }
 
+  .report-left {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .report-middle {
+    grid-row: 1;
+    grid-column: 2;
+    border-right: none;
+  }
+
   .report-right {
+    grid-row: 2;
     grid-column: 1 / -1;
     flex-direction: row;
     justify-content: flex-end;
     border-top: 1px solid #f1f5f9;
+    padding: 12px 16px;
   }
 
   .action-btn {
@@ -733,7 +831,47 @@
   }
 
   .report-left {
+    grid-row: 1;
+    grid-column: 1;
     width: 100%;
-    min-height: 160px;
+  }
+
+  .report-left::before {
+    padding-top: 56.25%;
+  }
+
+  .report-middle {
+    grid-row: 2;
+    grid-column: 1;
+    border-left: none;
+  }
+
+  .report-right {
+    grid-row: 3;
+    grid-column: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-dashboard {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .analytics-dashboard .data-area {
+    padding: 16px;
+  }
+
+  .analytics-dashboard .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }

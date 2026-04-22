@@ -1,4 +1,3 @@
-// backend/middlaeware/authmiddleware.js
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
@@ -15,7 +14,7 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: "User not found" });
       }
 
-      return next(); // ← added return, stops execution here
+      return next();
     } catch (error) {
       return res.status(401).json({ message: "Not authorized, token failed" });
     }

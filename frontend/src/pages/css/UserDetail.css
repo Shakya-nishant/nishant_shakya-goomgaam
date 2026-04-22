@@ -9,6 +9,7 @@ html, body {
   min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
+  background: #f3f4f6;
 }
 
 .user-detail-container h2 {

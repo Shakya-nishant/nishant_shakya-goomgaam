@@ -95,7 +95,9 @@ router.post("/request", protect, async (req, res) => {
     const { to, chat, type = "private" } = req.body;
 
     if (to === req.user._id.toString()) {
-      return res.status(400).json({ message: "Cannot send request to yourself" });
+      return res
+        .status(400)
+        .json({ message: "Cannot send request to yourself" });
     }
 
     const existingRequest = await ChatRequest.findOne({
@@ -118,7 +120,9 @@ router.post("/request", protect, async (req, res) => {
     if (type === "group" && chat) {
       const group = await Chat.findById(chat);
       if (group && group.participants.some((id) => id.toString() === to)) {
-        return res.status(400).json({ message: "User is already a member of this group" });
+        return res
+          .status(400)
+          .json({ message: "User is already a member of this group" });
       }
     }
 
@@ -129,7 +133,6 @@ router.post("/request", protect, async (req, res) => {
       type,
     }).save();
 
-    // ── get io FIRST before using it ──
     const io = req.app.get("io");
 
     await Notification.create({
@@ -142,7 +145,6 @@ router.post("/request", protect, async (req, res) => {
           : `sent you a chat request`,
     });
 
-    // emit to recipient's personal room
     io.to(to.toString()).emit("newNotification");
     io.to(to.toString()).emit("newChatRequest");
 
@@ -199,9 +201,7 @@ router.put("/request/:requestId", protect, async (req, res) => {
 
       request.status = "accepted";
       await request.save();
-
     } else if (status === "rejected") {
-      // ── Delete the request from DB entirely on rejection ──
       await ChatRequest.findByIdAndDelete(request._id);
     }
 
@@ -299,7 +299,6 @@ router.put(
         }
         if (isPlanningUpdated) {
           if ((chat.planningEditCount || 0) >= 5) {
-            // changed to 5
             return res.status(400).json({
               message: "Maximum 5 edits reached for planning details.",
             });
@@ -341,7 +340,7 @@ router.get("/unread", protect, async (req, res) => {
         const unreadCount = await Message.countDocuments({
           chat: chat._id,
           sender: { $ne: req.user._id },
-          readBy: { $nin: [req.user._id] }, // ✅ FIXED
+          readBy: { $nin: [req.user._id] },
         });
         if (unreadCount > 0) {
           const lastMsg = await Message.findOne({ chat: chat._id })
